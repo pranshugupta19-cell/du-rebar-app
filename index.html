@@ -192,7 +192,9 @@ let activeLine = null, activeFilter = null;
 let cache = [];
 try { cache = JSON.parse(localStorage.getItem('du_logs') || '[]'); } catch(e) {}
 
-function today() { return new Date().toISOString().slice(0,10); }
+function istNow() { return new Date(new Date().getTime() + 5.5*60*60*1000); }
+function istString() { const d=istNow(); return d.toISOString().slice(0,19).replace('T',' ')+' IST'; }
+function today() { return istNow().toISOString().slice(0,10); }
 
 function toast(msg, type) {
   const el = document.getElementById('toast');
@@ -265,7 +267,7 @@ function submitBatch() {
   const vals={c1,c2,c3}; if(c4!==null&&!isNaN(c4)&&c4>0) vals.c4=c4;
   const total=+Object.values(vals).reduce((s,v)=>s+v,0).toFixed(4);
   const alerts=Object.keys(vals).filter(k=>dev(vals[k],TARGETS[k])>5).length;
-  const entry={timestamp:new Date().toISOString(),line:activeLine,c1,c2,c3,c4:vals.c4||null,total,alerts};
+  const entry={timestamp:istString(),line:activeLine,c1,c2,c3,c4:vals.c4||null,total,alerts};
   cache.push({...entry,date:today()});
   try{localStorage.setItem('du_logs',JSON.stringify(cache));}catch(e){}
   const btn=document.getElementById('submit-btn');
@@ -313,8 +315,7 @@ function renderToday(data,line) {
   if(!rows.length){document.getElementById('today-log').innerHTML=`<div class="empty">No cycles logged on ${line} today</div>`;return;}
   let html='';
   [...rows].reverse().forEach(r=>{
-    const t=new Date(r.timestamp);
-    const time=t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const time = (r.timestamp||'').slice(11,16) || '—';
     const c4str=r.c4?` · C4:${parseFloat(r.c4).toFixed(3)}`:'';
     const al=parseInt(r.alerts||0);
     html+=`<div class="log-item">
