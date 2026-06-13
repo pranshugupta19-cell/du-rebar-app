@@ -4,525 +4,272 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#1a56a0">
-<title>DU Rebar — Production Log</title>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1D9E75">
+<title>DU Rebar — Chemical Log</title>
 <style>
-:root{
-  --blue:#1a56a0;--blue-light:#EBF2FB;--blue-dark:#0e3570;
-  --green:#1D9E75;--green-light:#E1F5EE;--green-dark:#085041;
-  --amber:#F59E0B;--amber-light:#FFFBEB;
-  --bad:#A32D2D;--bad-bg:#FCEBEB;
-  --bg:#F5F5F5;--surface:#FFFFFF;
-  --border:#E0E0E0;--text:#111;--sub:#666;--muted:#999;
-  --radius:12px;--radius-sm:8px;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-.app{max-width:480px;margin:0 auto;padding:0 0 80px;}
-header{background:var(--blue);color:#fff;padding:16px 20px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
-header .icon{width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;}
-header h1{font-size:16px;font-weight:600;}
-header p{font-size:12px;opacity:0.8;margin-top:1px;}
-.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:66px;z-index:99;overflow-x:auto;}
-.tab{flex:1;min-width:65px;padding:12px 4px;font-size:12px;font-weight:500;color:var(--sub);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
-.panel{display:none;padding:16px;}
-.panel.active{display:block;}
-.card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--border);}
-.card-title{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
-.type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.type-btn{padding:14px 6px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;text-align:center;}
-.type-btn .t-icon{font-size:22px;margin-bottom:4px;}
-.type-btn .t-name{font-size:12px;font-weight:600;color:var(--text);}
-.type-btn .t-sub{font-size:10px;color:var(--sub);margin-top:2px;}
-.type-btn.selected{border-color:var(--blue);background:var(--blue-light);}
-.type-btn.selected .t-name{color:var(--blue-dark);}
-.dia-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-.dia-btn{padding:10px 4px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:13px;font-weight:700;color:var(--sub);text-align:center;}
-.dia-btn.selected{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
-.seg-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.seg-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
-.seg-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
-.seg-btn{padding:10px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:13px;font-weight:700;color:var(--sub);text-align:center;}
-.seg-btn.selected{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
-.field{margin-bottom:12px;}
-.field label{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-bottom:5px;}
-.field label span{font-size:11px;color:var(--muted);}
-.field input,.field select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:16px;color:var(--text);background:var(--surface);outline:none;}
-.field input:focus{border-color:var(--blue);}
-.divider{height:1px;background:var(--border);margin:14px 0;}
-.partial-box{background:var(--amber-light);border:1.5px solid var(--amber);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;}
-.partial-box .pb-title{font-size:12px;font-weight:600;color:#92400E;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-.summary-box{background:var(--bg);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px;}
-.sum-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}
-.sum-row.total{font-weight:700;font-size:15px;border-top:1px solid var(--border);margin-top:6px;padding-top:8px;}
-.btn-primary{width:100%;padding:15px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;}
-.btn-primary:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
-.btn-primary:active:not(:disabled){opacity:0.85;}
-.btn-secondary{width:100%;padding:13px;background:var(--surface);color:var(--blue);border:1.5px solid var(--blue);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;}
-.btn-amber{width:100%;padding:13px;background:#F59E0B;color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;}
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.metric{background:var(--surface);border-radius:var(--radius);padding:14px;border:1px solid var(--border);}
-.metric-label{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;}
-.metric-value{font-size:20px;font-weight:600;color:var(--text);}
-.metric-unit{font-size:11px;font-weight:400;color:var(--sub);}
-.stock-table{width:100%;border-collapse:collapse;}
-.stock-table th{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;}
-.stock-table td{font-size:13px;padding:9px 8px;border-bottom:1px solid var(--border);vertical-align:middle;}
-.stock-table tr:last-child td{border-bottom:none;}
-.dia-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:var(--blue-light);color:var(--blue-dark);}
-.pending-item{background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;}
-.pending-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.pending-title{font-size:13px;font-weight:600;color:#92400E;}
-.pending-sub{font-size:11px;color:#B45309;margin-bottom:8px;}
-.complete-btn{padding:6px 14px;background:var(--green);color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;}
-.log-item{padding:11px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
-.log-item:last-child{border-bottom:none;}
-.log-time{font-size:11px;color:var(--sub);margin-bottom:2px;}
-.log-desc{font-size:13px;color:var(--text);font-weight:500;}
-.log-sub{font-size:11px;color:var(--sub);margin-top:2px;}
-.log-right{text-align:right;white-space:nowrap;margin-left:10px;}
-.log-m{font-size:14px;font-weight:600;color:var(--blue);}
-.log-kg{font-size:11px;color:var(--sub);}
-.type-tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;margin-right:4px;}
-.tag-coil{background:#E6F1FB;color:#0C447C;}
-.tag-bundle{background:#EAF3DE;color:#3B6D11;}
-.tag-prebend{background:#F3E8FF;color:#5B21B6;}
-.tag-partial{background:var(--amber-light);color:#92400E;}
-.tag-complete{background:var(--green-light);color:var(--green-dark);}
-.empty{text-align:center;padding:32px 16px;color:var(--sub);font-size:14px;line-height:1.7;}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:999;white-space:nowrap;max-width:90vw;text-align:center;}
-.toast.show{opacity:1;}
-.toast.ok{background:var(--green);}
-.toast.err{background:var(--bad);}
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;}
-.modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;margin:0 auto;max-height:85vh;overflow-y:auto;}
-.modal-title{font-size:16px;font-weight:600;margin-bottom:4px;}
-.modal-sub{font-size:13px;color:var(--sub);margin-bottom:16px;}
-.modal-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:var(--sub);margin-top:-4px;}
-
-/* PIN / Auth */
-.pin-overlay{display:none;position:fixed;inset:0;background:var(--blue);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
-.pin-overlay.open{display:flex;}
-.pin-logo{font-size:48px;margin-bottom:16px;}
-.pin-title{font-size:20px;font-weight:700;color:#fff;margin-bottom:6px;}
-.pin-sub{font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:32px;text-align:center;}
-.pin-dots{display:flex;gap:12px;margin-bottom:28px;}
-.pin-dot{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,0.3);transition:background 0.15s;}
-.pin-dot.filled{background:#fff;}
-.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:240px;}
-.pin-btn{padding:18px;border:none;border-radius:var(--radius);background:rgba(255,255,255,0.15);color:#fff;font-size:22px;font-weight:600;cursor:pointer;}
-.pin-btn:active{background:rgba(255,255,255,0.3);}
-.pin-btn.zero{grid-column:2;}
-.pin-btn.del{background:rgba(255,255,255,0.08);font-size:18px;}
-.pin-error{color:#FCA5A5;font-size:13px;margin-top:12px;min-height:20px;}
-.operator-bar{background:var(--blue-light);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12px;}
-.operator-name{font-weight:600;color:var(--blue-dark);}
-.operator-logout{color:var(--blue);font-size:11px;background:none;border:none;cursor:pointer;font-weight:600;}
-/* Machine events */
-.event-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.event-btn{padding:16px 10px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;text-align:center;}
-.event-btn .e-icon{font-size:24px;margin-bottom:6px;}
-.event-btn .e-name{font-size:12px;font-weight:600;color:var(--text);}
-.event-btn .e-sub{font-size:10px;color:var(--sub);margin-top:2px;}
-.event-btn.ev-start{border-color:var(--green);background:var(--green-light);}
-.event-btn.ev-stop{border-color:#E0E0E0;background:#F9F9F9;}
-.event-btn.ev-breakdown{border-color:var(--amber);background:var(--amber-light);}
-.event-btn.ev-power{border-color:var(--bad);background:var(--bad-bg);}
-.event-btn.ev-restore{border-color:var(--green);background:var(--green-light);}
-.active-event{border-radius:var(--radius-sm);padding:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
-.ae-breakdown{background:var(--amber-light);border:1.5px solid var(--amber);}
-.ae-power{background:var(--bad-bg);border:1.5px solid #E24B4A;}
-.ae-running{background:var(--green-light);border:1.5px solid var(--green);}
-.ae-info{font-size:12px;font-weight:600;}
-.ae-sub{font-size:11px;color:var(--sub);margin-top:2px;}
-.ae-time{font-size:11px;color:var(--sub);white-space:nowrap;margin-left:8px;text-align:right;}
-.end-btn{padding:5px 12px;border:none;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;}
-.end-breakdown{background:var(--green);color:#fff;}
-.end-power{background:var(--green);color:#fff;}
-.end-stop{background:var(--bad);color:#fff;}
-.event-log-item{padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;}
-.event-log-item:last-child{border-bottom:none;}
-.el-left{flex:1;}
-.el-type{font-size:12px;font-weight:600;color:var(--text);}
-.el-detail{font-size:11px;color:var(--sub);margin-top:2px;}
-.el-right{text-align:right;font-size:11px;color:var(--sub);white-space:nowrap;margin-left:8px;}
-.ev-tag{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;margin-right:3px;}
-.evt-start{background:var(--green-light);color:var(--green-dark);}
-.evt-stop{background:#F3F4F6;color:#374151;}
-.evt-breakdown{background:var(--amber-light);color:#92400E;}
-.evt-restore{background:var(--green-light);color:var(--green-dark);}
-.evt-power{background:var(--bad-bg);color:var(--bad);}
-/* Admin */
-.admin-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);}
-.admin-item:last-child{border-bottom:none;}
-.admin-name{font-size:14px;font-weight:600;}
-.admin-pin{font-size:12px;color:var(--sub);margin-top:2px;}
-.del-op-btn{padding:4px 12px;background:var(--bad-bg);color:var(--bad);border:none;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;}
+  :root {
+    --green:#1D9E75; --green-light:#E1F5EE; --green-dark:#085041;
+    --warn-bg:#FAEEDA; --warn-fg:#854F0B;
+    --bad-bg:#FCEBEB; --bad-fg:#A32D2D;
+    --ok-bg:#EAF3DE; --ok-fg:#3B6D11;
+    --bg:#F5F5F5; --surface:#FFFFFF;
+    --border:#E0E0E0; --text:#111; --sub:#666; --muted:#999;
+    --radius:12px; --radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  .app{max-width:480px;margin:0 auto;padding:0 0 80px;}
+  header{background:var(--green);color:#fff;padding:16px 20px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+  header .icon{width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+  header h1{font-size:16px;font-weight:600;}
+  header p{font-size:12px;opacity:0.8;margin-top:1px;}
+  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:66px;z-index:99;overflow-x:auto;}
+  .tab{flex:1;min-width:70px;padding:12px 6px;font-size:12px;font-weight:500;color:var(--sub);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+  .tab.active{color:var(--green);border-bottom-color:var(--green);}
+  .panel{display:none;padding:16px;}
+  .panel.active{display:block;}
+  .card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--border);}
+  .card-title{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;}
+  .line-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .line-btn{padding:18px 12px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer;text-align:center;transition:all 0.15s;}
+  .line-btn .name{font-size:22px;font-weight:700;color:var(--text);}
+  .line-btn .sub{font-size:11px;color:var(--sub);margin-top:3px;}
+  .line-btn.selected{border-color:var(--green);background:var(--green-light);}
+  .line-btn.selected .name{color:var(--green-dark);}
+  .line-btn.selected .sub{color:var(--green);}
+  .mult-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+  .mult-btn{padding:10px 4px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:15px;font-weight:700;color:var(--sub);text-align:center;}
+  .mult-btn.selected{border-color:var(--green);color:var(--green);background:var(--green-light);}
+  .field{margin-bottom:12px;}
+  .field label{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-bottom:5px;}
+  .field label span{font-size:11px;color:var(--muted);}
+  .field input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:16px;color:var(--text);background:var(--surface);outline:none;}
+  .field input:focus{border-color:var(--green);}
+  .field input.hint{border-color:#b0d8c8;background:#f4fbf8;}
+  .ratio-row{display:flex;align-items:flex-start;gap:8px;padding:10px;border-radius:var(--radius-sm);background:var(--bg);margin-bottom:8px;}
+  .ratio-info{flex:1;min-width:0;}
+  .ratio-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+  .ratio-name{font-size:13px;font-weight:600;}
+  .ratio-sub{font-size:11px;color:var(--sub);}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;}
+  .badge-ok{background:var(--ok-bg);color:var(--ok-fg);}
+  .badge-warn{background:var(--warn-bg);color:var(--warn-fg);}
+  .badge-bad{background:var(--bad-bg);color:var(--bad-fg);}
+  .badge-opt{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
+  .badge-waste{background:#F3E8FF;color:#5B21B6;}
+  .badge-edit{background:#E0F2FE;color:#0369A1;}
+  .bar{height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:5px;}
+  .bar-fill{height:100%;border-radius:2px;}
+  .total-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);margin-top:10px;}
+  .total-row span:first-child{font-size:13px;color:var(--sub);}
+  .total-row span:last-child{font-size:20px;font-weight:600;}
+  .btn-primary{width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
+  .btn-primary:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;}
+  .btn-primary:active:not(:disabled){opacity:0.85;}
+  .btn-secondary{width:100%;padding:13px;background:var(--surface);color:var(--green);border:1.5px solid var(--green);border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;}
+  .metrics{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+  .metric{background:var(--surface);border-radius:var(--radius);padding:14px;border:1px solid var(--border);}
+  .metric-label{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px;}
+  .metric-value{font-size:22px;font-weight:600;color:var(--text);}
+  .metric-unit{font-size:12px;font-weight:400;color:var(--sub);}
+  .log-item{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--border);}
+  .log-item:last-child{border-bottom:none;}
+  .log-time{font-size:12px;color:var(--sub);margin-bottom:2px;}
+  .log-vals{font-size:12px;color:var(--text);}
+  .log-kg{font-size:14px;font-weight:600;color:var(--green);margin-left:10px;white-space:nowrap;text-align:right;}
+  .log-actions{display:flex;gap:6px;margin-top:5px;}
+  .act-btn{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:none;cursor:pointer;}
+  .act-edit{background:#E0F2FE;color:#0369A1;}
+  .act-del{background:var(--bad-bg);color:var(--bad-fg);}
+  .empty{text-align:center;padding:32px 16px;color:var(--sub);font-size:14px;line-height:1.7;}
+  .line-filter{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+  .line-filter-btn{padding:10px 4px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:15px;font-weight:700;color:var(--sub);}
+  .line-filter-btn.active{border-color:var(--green);color:var(--green);background:var(--green-light);}
+  .lb{display:inline-block;padding:1px 7px;border-radius:20px;font-size:10px;font-weight:700;margin-right:4px;}
+  .lb-S1{background:#E6F1FB;color:#0C447C;}
+  .lb-S2{background:#EEEDFE;color:#3C3489;}
+  .lb-B1{background:#FAEEDA;color:#633806;}
+  .lb-B2{background:#FAECE7;color:#712B13;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:11px 20px;border-radius:24px;font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:opacity 0.25s;z-index:999;white-space:nowrap;max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;}
+  .toast.ok{background:var(--green);}
+  .toast.err{background:var(--bad-fg);}
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;align-items:flex-end;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 16px 32px;width:100%;max-width:480px;margin:0 auto;}
+  .modal-title{font-size:16px;font-weight:600;margin-bottom:16px;}
+  .modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:var(--sub);}
+  .waste-big{width:100%;padding:16px;font-size:32px;font-weight:700;text-align:center;border:1.5px solid var(--border);border-radius:var(--radius);color:var(--text);background:var(--surface);outline:none;margin-bottom:12px;}
+  .waste-big:focus{border-color:var(--green);}
+  .waste-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+  .waste-preset{padding:10px 4px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:14px;font-weight:600;color:var(--sub);text-align:center;}
+  .waste-preset:active{background:var(--green-light);border-color:var(--green);color:var(--green-dark);}
+  .info-pill{display:inline-block;background:var(--green-light);color:var(--green-dark);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:12px;}
 </style>
 </head>
 <body>
-
-<!-- PIN OVERLAY -->
-<div class="pin-overlay" id="pin-overlay">
-  <div class="pin-logo">🔐</div>
-  <div class="pin-title">DU Rebar</div>
-  <div class="pin-sub" id="pin-sub">Enter your PIN to continue</div>
-  <div class="pin-dots" id="pin-dots">
-    <div class="pin-dot" id="pd0"></div>
-    <div class="pin-dot" id="pd1"></div>
-    <div class="pin-dot" id="pd2"></div>
-    <div class="pin-dot" id="pd3"></div>
-  </div>
-  <div class="pin-pad">
-    <button class="pin-btn" onclick="pinPress('1')">1</button>
-    <button class="pin-btn" onclick="pinPress('2')">2</button>
-    <button class="pin-btn" onclick="pinPress('3')">3</button>
-    <button class="pin-btn" onclick="pinPress('4')">4</button>
-    <button class="pin-btn" onclick="pinPress('5')">5</button>
-    <button class="pin-btn" onclick="pinPress('6')">6</button>
-    <button class="pin-btn" onclick="pinPress('7')">7</button>
-    <button class="pin-btn" onclick="pinPress('8')">8</button>
-    <button class="pin-btn" onclick="pinPress('9')">9</button>
-    <button class="pin-btn zero" onclick="pinPress('0')">0</button>
-    <button class="pin-btn del" onclick="pinDel()">⌫</button>
-  </div>
-  <div class="pin-error" id="pin-error"></div>
-</div>
-
-<!-- OPERATOR BAR -->
-<div class="operator-bar" id="operator-bar" style="display:none;">
-  <span>👤 Logged in as: <span class="operator-name" id="op-name-bar">—</span></span>
-  <button class="operator-logout" onclick="logout()">Change operator</button>
-</div>
 <div class="app">
   <header>
-    <div class="icon">📏</div>
+    <div class="icon">⚗️</div>
     <div>
-      <h1>DU Rebar — Production</h1>
-      <p>Metres · kg · pending stock tracker</p>
+      <h1>DU Rebar — Chemical Log</h1>
+      <p>5.66 kg/cycle · 40 min/cycle</p>
     </div>
   </header>
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('log')">Log</button>
-    <button class="tab" onclick="switchTab('pending')">Pending <span id="pending-badge"></span></button>
-    <button class="tab" onclick="switchTab('stock')">Stock</button>
+    <button class="tab active" onclick="switchTab('log')">Log Cycle</button>
     <button class="tab" onclick="switchTab('today')">Today</button>
-    <button class="tab" onclick="switchTab('history')">History</button>
-    <button class="tab" onclick="switchTab('machine')">Machine</button>
-    <button class="tab" onclick="switchTab('admin')">Admin</button>
+    <button class="tab" onclick="switchTab('all')">All Lines</button>
+    <button class="tab" onclick="switchTab('waste')">Waste</button>
   </div>
 
-  <!-- ===== LOG ===== -->
+  <!-- LOG CYCLE -->
   <div id="panel-log" class="panel active">
-
     <div class="card">
-      <div class="card-title">Production type</div>
-      <div class="type-grid">
-        <button class="type-btn" onclick="selectType(this,'coil')">
-          <div class="t-icon">🔄</div><div class="t-name">Coil</div><div class="t-sub">Custom length</div>
-        </button>
-        <button class="type-btn" onclick="selectType(this,'bundle')">
-          <div class="t-icon">📦</div><div class="t-name">Bundle</div><div class="t-sub">6m or 12m</div>
-        </button>
-        <button class="type-btn" onclick="selectType(this,'prebend')">
-          <div class="t-icon">📐</div><div class="t-name">Prebend</div><div class="t-sub">L, U, Custom</div>
-        </button>
+      <div class="card-title">Select Your Line</div>
+      <div class="line-grid">
+        <button class="line-btn" onclick="selectLine(this,'S1')"><div class="name">S1</div><div class="sub">Straight 1</div></button>
+        <button class="line-btn" onclick="selectLine(this,'S2')"><div class="name">S2</div><div class="sub">Straight 2</div></button>
+        <button class="line-btn" onclick="selectLine(this,'B1')"><div class="name">B1</div><div class="sub">Bend 1</div></button>
+        <button class="line-btn" onclick="selectLine(this,'B2')"><div class="name">B2</div><div class="sub">Bend 2</div></button>
       </div>
     </div>
 
-    <div class="card" id="dia-card" style="display:none;">
-      <div class="card-title">Diameter</div>
-      <div class="dia-grid">
-        <button class="dia-btn" onclick="selectDia(this,'6')">6mm</button>
-        <button class="dia-btn" onclick="selectDia(this,'7')">7mm</button>
-        <button class="dia-btn" onclick="selectDia(this,'8')">8mm</button>
-        <button class="dia-btn" onclick="selectDia(this,'10')">10mm</button>
-        <button class="dia-btn" onclick="selectDia(this,'12')">12mm</button>
-        <button class="dia-btn" onclick="selectDia(this,'16')">16mm</button>
-        <button class="dia-btn" onclick="selectDia(this,'20')">20mm</button>
+    <div class="card" id="mult-card" style="display:none;">
+      <div class="card-title">Batch Size (Multiplier)</div>
+      <div class="mult-grid">
+        <button class="mult-btn selected" id="mb-1" onclick="setMult(1,this)">1×</button>
+        <button class="mult-btn" id="mb-2" onclick="setMult(2,this)">2×</button>
+        <button class="mult-btn" id="mb-3" onclick="setMult(3,this)">3×</button>
+        <button class="mult-btn" id="mb-c" onclick="setMult('custom',this)">Custom</button>
       </div>
-    </div>
-
-    <!-- COIL -->
-    <div class="card" id="coil-card" style="display:none;">
-      <div class="card-title">Coil details</div>
-      <div class="field">
-        <label>Coil length (metres) <span>length per coil</span></label>
-        <input type="number" id="coil-len" step="1" placeholder="e.g. 100" inputmode="decimal" oninput="updateSummary()">
-      </div>
-      <div class="field">
-        <label>Complete coils <span>fully wound and closed</span></label>
-        <input type="number" id="coil-qty" step="1" placeholder="e.g. 5" inputmode="numeric" oninput="updateSummary()">
-      </div>
-      <div class="divider"></div>
-      <div class="partial-box">
-        <div class="pb-title">🟡 Partial coil (if any)</div>
-        <div class="field" style="margin-bottom:8px;">
-          <label>Metres wound so far <span>leave blank if none</span></label>
-          <input type="number" id="coil-partial-m" step="1" placeholder="e.g. 67" inputmode="decimal" oninput="updateSummary()">
-        </div>
-      </div>
-    </div>
-
-    <!-- BUNDLE -->
-    <div class="card" id="bundle-card" style="display:none;">
-      <div class="card-title">Bundle details</div>
-      <div class="field">
-        <label>Bundle length</label>
-        <div class="seg-grid">
-          <button class="seg-btn selected" id="bl-12" onclick="setBundleLen(12,this)">12m</button>
-          <button class="seg-btn" id="bl-6" onclick="setBundleLen(6,this)">6m</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>Pieces per bundle <span>standard count</span></label>
-        <input type="number" id="bundle-pcs" step="1" placeholder="e.g. 48" inputmode="numeric" oninput="updateSummary()">
-      </div>
-      <div class="field">
-        <label>Complete bundles <span>fully packed</span></label>
-        <input type="number" id="bundle-qty" step="1" placeholder="e.g. 9" inputmode="numeric" oninput="updateSummary()">
-      </div>
-      <div class="divider"></div>
-      <div class="partial-box">
-        <div class="pb-title">🟡 Loose pieces (if any)</div>
+      <div id="custom-mult-field" style="display:none;">
         <div class="field" style="margin-bottom:0;">
-          <label>Loose pieces count <span>not yet packed into a bundle</span></label>
-          <input type="number" id="bundle-loose" step="1" placeholder="e.g. 7" inputmode="numeric" oninput="updateSummary()">
+          <label>Custom multiplier <span>e.g. 1.5 for 1.5× batch</span></label>
+          <input type="number" id="custom-mult" step="0.1" min="0.1" placeholder="e.g. 1.5" inputmode="decimal" oninput="applyCustomMult()">
         </div>
+      </div>
+      <div id="mult-hint" style="font-size:12px;color:var(--green);margin-top:8px;font-weight:500;"></div>
+    </div>
+
+    <div class="card" id="entry-card" style="display:none;">
+      <div class="card-title" id="entry-title">Cycle Amounts</div>
+      <div class="field">
+        <label>Chem 01 <span id="t1-label">Target: 3.000 kg</span></label>
+        <input type="number" id="c1" step="0.001" placeholder="3.000" inputmode="decimal" oninput="updateRatios()">
+      </div>
+      <div class="field">
+        <label>Chem 02 <span id="t2-label">Target: 2.400 kg</span></label>
+        <input type="number" id="c2" step="0.001" placeholder="2.400" inputmode="decimal" oninput="updateRatios()">
+      </div>
+      <div class="field">
+        <label>Chem 03 <span id="t3-label">Target: 0.119 kg</span></label>
+        <input type="number" id="c3" step="0.001" placeholder="0.119" inputmode="decimal" oninput="updateRatios()">
+      </div>
+      <div class="field">
+        <label>Chem 04 <span style="color:var(--green);" id="t4-label">Optional · 0.141 kg</span></label>
+        <input type="number" id="c4" step="0.001" placeholder="Leave blank if not used" inputmode="decimal" oninput="updateRatios()">
       </div>
     </div>
 
-    <!-- PREBEND -->
-    <div class="card" id="prebend-card" style="display:none;">
-      <div class="card-title">Prebend details</div>
-      <div class="field">
-        <label>Shape</label>
-        <div class="seg-grid-3">
-          <button class="seg-btn" id="sh-L" onclick="selectShape('L bend',this)">L bend</button>
-          <button class="seg-btn" id="sh-U" onclick="selectShape('U bend',this)">U bend</button>
-          <button class="seg-btn" id="sh-C" onclick="selectShape('custom',this)">Custom</button>
-        </div>
-        <input type="text" id="custom-shape-name" placeholder="Enter shape name (e.g. Z bend, Stirrup)" style="display:none;margin-top:8px;">
-      </div>
-      <div class="field">
-        <label>Length per piece <span>total metres all legs combined</span></label>
-        <input type="number" id="pb-len" step="0.01" placeholder="e.g. 1.710" inputmode="decimal" oninput="updateSummary()">
-      </div>
-      <div class="field">
-        <label>Complete pieces <span>finished and stacked</span></label>
-        <input type="number" id="pb-qty" step="1" placeholder="e.g. 120" inputmode="numeric" oninput="updateSummary()">
-      </div>
-      <div class="divider"></div>
-      <div class="partial-box">
-        <div class="pb-title">🟡 Partial / cut pieces (if any)</div>
-        <div class="field" style="margin-bottom:8px;">
-          <label>Piece count <span>pieces started but not finished</span></label>
-          <input type="number" id="pb-partial-qty" step="1" placeholder="e.g. 3" inputmode="numeric" oninput="updateSummary()">
-        </div>
-        <div class="field" style="margin-bottom:0;">
-          <label>Length per partial piece <span>metres</span></label>
-          <input type="number" id="pb-partial-len" step="0.01" placeholder="e.g. 0.85" inputmode="decimal" oninput="updateSummary()">
-        </div>
+    <div class="card" id="ratio-card" style="display:none;">
+      <div class="card-title">Ratio Check</div>
+      <div id="ratio-content"></div>
+      <div class="total-row">
+        <span>Batch total</span>
+        <span id="batch-total">—</span>
       </div>
     </div>
 
-    <!-- WEIGHT + LINE -->
-    <div class="card" id="wt-card" style="display:none;">
-      <div class="card-title">Weight & line</div>
-
-      <!-- Summary -->
-      <div class="summary-box" id="entry-summary"></div>
-
-      <div class="field">
-        <label>Weight per metre (kg/m) <span>optional — enter once per diameter</span></label>
-        <input type="number" id="prod-wpm" step="0.0001" placeholder="e.g. 0.290 for 12mm" inputmode="decimal" oninput="calcKgFromWpm()">
-      </div>
-      <div id="wpm-calc-row" style="display:none;background:var(--green-light);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;">
-        <span style="font-size:12px;color:var(--green-dark);font-weight:500;" id="wpm-calc-text"></span>
-      </div>
-      <div class="field">
-        <label>Production line</label>
-        <div class="seg-grid">
-          <button class="seg-btn" id="ln-S1" onclick="selectLine('S1',this)">S1</button>
-          <button class="seg-btn" id="ln-S2" onclick="selectLine('S2',this)">S2</button>
-          <button class="seg-btn" id="ln-B1" onclick="selectLine('B1',this)">B1</button>
-          <button class="seg-btn" id="ln-B2" onclick="selectLine('B2',this)">B2</button>
-        </div>
-      </div>
-      <div class="field">
-        <label>Note <span>optional</span></label>
-        <input type="text" id="prod-note" placeholder="e.g. morning shift, order #12">
-      </div>
-    </div>
-
-    <button class="btn-primary" id="prod-submit" onclick="submitProd()" disabled>Select type to begin</button>
+    <button class="btn-primary" id="submit-btn" onclick="submitBatch()" disabled>Select a line first</button>
   </div>
 
-  <!-- ===== PENDING ===== -->
-  <div id="panel-pending" class="panel">
-    <div style="font-size:13px;color:var(--sub);margin-bottom:14px;line-height:1.6;">
-      These are partial/loose pieces from previous entries. When packed into a complete bundle or coil, tap <b>Complete</b> to close them out and avoid double counting.
-    </div>
-    <div id="pending-list"><div class="empty">No pending items 👍</div></div>
-  </div>
-
-  <!-- ===== STOCK ===== -->
-  <div id="panel-stock" class="panel">
-    <div class="metrics">
-      <div class="metric"><div class="metric-label">Total metres</div><div class="metric-value" id="s-total-m">—</div></div>
-      <div class="metric"><div class="metric-label">Total kg</div><div class="metric-value" id="s-total-kg">—</div></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Completed stock by diameter</div>
-      <table class="stock-table">
-        <thead><tr><th>Dia</th><th>Metres</th><th>kg</th><th>Breakdown</th></tr></thead>
-        <tbody id="stock-by-dia"></tbody>
-      </table>
-    </div>
-    <div class="card">
-      <div class="card-title">By type</div>
-      <table class="stock-table">
-        <thead><tr><th>Type</th><th>Metres</th><th>kg</th></tr></thead>
-        <tbody id="stock-by-type"></tbody>
-      </table>
-    </div>
-    <button class="btn-secondary" onclick="renderStock()">↻ Refresh</button>
-  </div>
-
-  <!-- ===== TODAY ===== -->
+  <!-- TODAY -->
   <div id="panel-today" class="panel">
-    <div class="metrics">
-      <div class="metric"><div class="metric-label">Entries</div><div class="metric-value" id="td-count">—</div></div>
-      <div class="metric"><div class="metric-label">Metres</div><div class="metric-value" id="td-m">—</div></div>
-      <div class="metric"><div class="metric-label">Weight</div><div class="metric-value" id="td-kg">—</div></div>
-      <div class="metric"><div class="metric-label">Pending</div><div class="metric-value" id="td-pend" style="color:var(--amber);">—</div></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Today's log</div>
-      <div id="today-log"><div class="empty">Nothing logged today yet</div></div>
-    </div>
-  </div>
-
-  <!-- ===== HISTORY ===== -->
-  <div id="panel-history" class="panel">
     <div class="card" style="padding:12px 16px;">
-      <div class="card-title" style="margin-bottom:10px;">Filter by diameter</div>
-      <div class="dia-grid" id="hist-filter-grid">
-        <button class="dia-btn selected" onclick="setHistFilter('all',this)">All</button>
-        <button class="dia-btn" onclick="setHistFilter('6',this)">6mm</button>
-        <button class="dia-btn" onclick="setHistFilter('7',this)">7mm</button>
-        <button class="dia-btn" onclick="setHistFilter('8',this)">8mm</button>
-        <button class="dia-btn" onclick="setHistFilter('10',this)">10mm</button>
-        <button class="dia-btn" onclick="setHistFilter('12',this)">12mm</button>
-        <button class="dia-btn" onclick="setHistFilter('16',this)">16mm</button>
-        <button class="dia-btn" onclick="setHistFilter('20',this)">20mm</button>
+      <div class="card-title" style="margin-bottom:10px;">Filter by line</div>
+      <div class="line-filter">
+        <button class="line-filter-btn" id="ft-S1" onclick="setFilter('S1')">S1</button>
+        <button class="line-filter-btn" id="ft-S2" onclick="setFilter('S2')">S2</button>
+        <button class="line-filter-btn" id="ft-B1" onclick="setFilter('B1')">B1</button>
+        <button class="line-filter-btn" id="ft-B2" onclick="setFilter('B2')">B2</button>
       </div>
     </div>
-    <div id="history-log"><div class="empty">No history yet</div></div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Cycles</div><div class="metric-value" id="td-c">—</div></div>
+      <div class="metric"><div class="metric-label">Total</div><div class="metric-value" id="td-t">—</div></div>
+      <div class="metric"><div class="metric-label">Avg/cycle</div><div class="metric-value" id="td-a">—</div></div>
+      <div class="metric"><div class="metric-label">Alerts</div><div class="metric-value" id="td-al">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title" id="today-title">Select a line above</div>
+      <div id="today-log"><div class="empty">Select a line to view today's cycles</div></div>
+    </div>
   </div>
 
-  <!-- ===== MACHINE EVENTS ===== -->
-  <div id="panel-machine" class="panel">
-
-    <div id="active-events-section" style="display:none;">
-      <div class="card-title" style="padding:0 0 8px;">Active now</div>
-      <div id="active-events-list"></div>
+  <!-- ALL LINES -->
+  <div id="panel-all" class="panel">
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Total cycles</div><div class="metric-value" id="all-c">—</div></div>
+      <div class="metric"><div class="metric-label">Total chem</div><div class="metric-value" id="all-t">—</div></div>
     </div>
+    <div id="line-cards"><div class="empty">Loading…</div></div>
+    <button class="btn-secondary" onclick="loadAll()">↻ Refresh</button>
+  </div>
 
+  <!-- WASTE -->
+  <div id="panel-waste" class="panel">
     <div class="card">
-      <div class="card-title">Log machine event</div>
+      <div class="card-title">Log End-of-Day Waste</div>
+      <div class="info-pill">Typical range: 1 – 3 kg per day</div>
       <div class="field">
-        <label>Line</label>
-        <div class="seg-grid">
-          <button class="seg-btn" id="me-S1" onclick="selectMeLine('S1',this)">S1</button>
-          <button class="seg-btn" id="me-S2" onclick="selectMeLine('S2',this)">S2</button>
-          <button class="seg-btn" id="me-B1" onclick="selectMeLine('B1',this)">B1</button>
-          <button class="seg-btn" id="me-B2" onclick="selectMeLine('B2',this)">B2</button>
+        <label>Select line <span>Which line produced this waste?</span></label>
+        <div class="line-grid" style="margin-bottom:0;" id="waste-line-grid">
+          <button class="line-btn" onclick="selectWasteLine(this,'S1')"><div class="name">S1</div></button>
+          <button class="line-btn" onclick="selectWasteLine(this,'S2')"><div class="name">S2</div></button>
+          <button class="line-btn" onclick="selectWasteLine(this,'B1')"><div class="name">B1</div></button>
+          <button class="line-btn" onclick="selectWasteLine(this,'B2')"><div class="name">B2</div></button>
         </div>
       </div>
-      <div class="event-grid" id="event-btns">
-        <button class="event-btn ev-start" onclick="logEvent('start')">
-          <div class="e-icon">▶️</div><div class="e-name">Machine Start</div><div class="e-sub">Begin production</div>
-        </button>
-        <button class="event-btn ev-stop" onclick="logEvent('stop')">
-          <div class="e-icon">⏹️</div><div class="e-name">Machine Stop</div><div class="e-sub">End of shift</div>
-        </button>
-        <button class="event-btn ev-breakdown" onclick="logEvent('breakdown')">
-          <div class="e-icon">⚠️</div><div class="e-name">Breakdown</div><div class="e-sub">Log fault + reason</div>
-        </button>
-        <button class="event-btn ev-restore" onclick="logEvent('restored')">
-          <div class="e-icon">✅</div><div class="e-name">Breakdown Fixed</div><div class="e-sub">Machine restored</div>
-        </button>
+      <div class="field" style="margin-top:14px;">
+        <label>Waste amount (kg)</label>
+        <div class="waste-presets">
+          <button class="waste-preset" onclick="setWaste(1)">1.0</button>
+          <button class="waste-preset" onclick="setWaste(1.5)">1.5</button>
+          <button class="waste-preset" onclick="setWaste(2)">2.0</button>
+          <button class="waste-preset" onclick="setWaste(2.5)">2.5</button>
+        </div>
+        <input class="waste-big" type="number" id="waste-kg" step="0.1" placeholder="0.0" inputmode="decimal">
       </div>
-      <div style="margin-top:10px;">
-        <button class="event-btn ev-power" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;" onclick="logEvent('power_failure')">
-          <span style="font-size:24px;">⚡</span>
-          <div style="text-align:left;"><div class="e-name" style="color:var(--bad);">Power Failure</div><div class="e-sub">All 4 lines affected</div></div>
-        </button>
-        <button class="event-btn ev-restore" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;margin-top:8px;" onclick="logEvent('power_restored')">
-          <span style="font-size:24px;">🔌</span>
-          <div style="text-align:left;"><div class="e-name" style="color:var(--green-dark);">Power Restored</div><div class="e-sub">All lines back up</div></div>
-        </button>
-      </div>
-    </div>
-
-    <!-- Breakdown reason modal trigger -->
-    <div id="breakdown-reason-box" style="display:none;" class="card">
-      <div class="card-title">Breakdown reason</div>
       <div class="field">
-        <label>Reason / fault description</label>
-        <input type="text" id="breakdown-reason" placeholder="e.g. Resin pump failure, Belt snapped">
+        <label>Note (optional) <span>e.g. "Line shutdown early"</span></label>
+        <input type="text" id="waste-note" placeholder="Optional reason" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;outline:none;">
       </div>
-      <button class="btn-primary" onclick="confirmBreakdown()">Confirm Breakdown Start</button>
+      <button class="btn-primary" onclick="submitWaste()">Record Waste</button>
     </div>
 
     <div class="card">
-      <div class="card-title">Today's machine log</div>
-      <div id="machine-log-list"><div class="empty">No events logged today</div></div>
+      <div class="card-title">Waste Log — Today</div>
+      <div id="waste-log"><div class="empty">No waste recorded today</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Summary</div>
+      <div id="waste-summary"><div class="empty">Log waste entries to see summary</div></div>
     </div>
   </div>
-
-  <!-- ===== ADMIN ===== -->
-  <div id="panel-admin" class="panel">
-    <div class="card">
-      <div class="card-title">Operators</div>
-      <div id="operator-list"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">Add new operator</div>
-      <div class="field">
-        <label>Name</label>
-        <input type="text" id="new-op-name" placeholder="e.g. Ramesh">
-      </div>
-      <div class="field">
-        <label>PIN (4 digits)</label>
-        <input type="number" id="new-op-pin" placeholder="e.g. 1234" maxlength="4" inputmode="numeric">
-      </div>
-      <button class="btn-primary" onclick="addOperator()">Add Operator</button>
-    </div>
-    <div class="card">
-      <div class="card-title" style="color:var(--bad);">Change Admin PIN</div>
-      <div class="field">
-        <label>New admin PIN (4 digits)</label>
-        <input type="number" id="new-admin-pin" placeholder="Current default: 0000" inputmode="numeric">
-      </div>
-      <button class="btn-primary" style="background:var(--bad);" onclick="changeAdminPin()">Update Admin PIN</button>
-    </div>
-  </div>
-
 </div>
 
-<!-- COMPLETE MODAL -->
-<div class="modal-overlay" id="complete-modal">
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-title" id="modal-title">Complete pending item</div>
-    <div class="modal-sub" id="modal-sub"></div>
-    <div id="modal-body"></div>
-    <button class="btn-primary" onclick="saveComplete()">Mark as Completed</button>
+    <button class="modal-close" onclick="closeEditModal()">✕</button>
+    <div class="modal-title">Edit Entry</div>
+    <div id="edit-fields"></div>
+    <button class="btn-primary" onclick="saveEdit()">Save Correction</button>
+    <button class="btn-secondary" style="color:var(--bad-fg);border-color:var(--bad-fg);" onclick="deleteEntry()">Delete Entry</button>
   </div>
 </div>
 
@@ -530,843 +277,380 @@ header p{font-size:12px;opacity:0.8;margin-top:1px;}
 
 <script>
 const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwdEhUOohMN2-R04Q2odx0RImKesXJo11NdfRrsF-7a7UZjhWhUkRkDLS8GSCva433Qyw/exec';
-const DIAS=['6','7','8','10','12','16','20'];
-
-let prodType=null, prodDia=null, prodLine=null;
-let bundleLen=12, prebendShape=null;
-let histFilter='all', completingId=null;
-
+const BASE={c1:3.000,c2:2.400,c3:0.119,c4:0.141};
+const LINES=['S1','S2','B1','B2'];
+let activeLine=null, wasteLine=null, multiplier=1;
+let editingEntry=null;
 let cache=[];
-try{cache=JSON.parse(localStorage.getItem('du_prod_v2')||'[]');}catch(e){}
-function saveCache(){try{localStorage.setItem('du_prod_v2',JSON.stringify(cache));}catch(e){}}
+try{cache=JSON.parse(localStorage.getItem('du_logs_v3')||'[]');}catch(e){}
+
+function saveCache(){try{localStorage.setItem('du_logs_v3',JSON.stringify(cache));}catch(e){}}
 
 function istNow(){return new Date(new Date().getTime()+5.5*60*60*1000);}
 function istDate(){return istNow().toISOString().slice(0,10);}
-function istTime(){return istNow().toISOString().slice(11,19);}
+function istTime(){
+  const d=istNow();
+  return d.toISOString().slice(11,19);
+}
 function today(){return istDate();}
 
-function toast(msg,type){const el=document.getElementById('toast');el.textContent=msg;el.className='toast show '+(type||'ok');setTimeout(()=>el.className='toast',2800);}
+function toast(msg,type){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show '+(type||'ok');
+  setTimeout(()=>el.className='toast',2800);
+}
 
-/* ---- SELECTORS ---- */
-function selectType(el,type){
-  prodType=type;
-  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('selected'));
+function dev(v,t){return Math.abs((v-t)/t*100);}
+function badge(d){
+  if(d<=5) return['badge-ok','OK'];
+  if(d<=10)return['badge-warn','High'];
+  return['badge-bad','Alert'];
+}
+
+/* ---- LINE SELECT ---- */
+function selectLine(el,line){
+  activeLine=line;
+  document.querySelectorAll('#panel-log .line-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
-  document.getElementById('dia-card').style.display='block';
-  ['coil','bundle','prebend'].forEach(t=>document.getElementById(t+'-card').style.display=t===type?'block':'none');
-  document.getElementById('wt-card').style.display='none';
-  updateSummary(); updateSubmit();
+  document.getElementById('mult-card').style.display='block';
+  document.getElementById('entry-card').style.display='block';
+  document.getElementById('entry-title').textContent='Cycle Amounts — Line '+line;
+  updateTargetLabels();
+  updateSubmitBtn();
 }
 
-function selectDia(el,dia){
-  prodDia=dia;
-  document.querySelectorAll('#dia-card .dia-btn').forEach(b=>b.classList.remove('selected'));
+/* ---- MULTIPLIER ---- */
+function setMult(val,el){
+  document.querySelectorAll('.mult-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected');
-  updateSummary(); updateSubmit();
+  if(val==='custom'){
+    document.getElementById('custom-mult-field').style.display='block';
+    const cv=parseFloat(document.getElementById('custom-mult').value);
+    multiplier=(!isNaN(cv)&&cv>0)?cv:1;
+  } else {
+    document.getElementById('custom-mult-field').style.display='none';
+    multiplier=val;
+  }
+  updateTargetLabels();
+  updateRatios();
 }
 
-function selectLine(line,el){
-  prodLine=line;
-  document.querySelectorAll('[id^="ln-"]').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-  updateSubmit();
+function applyCustomMult(){
+  const v=parseFloat(document.getElementById('custom-mult').value);
+  multiplier=(!isNaN(v)&&v>0)?v:1;
+  updateTargetLabels();
+  updateRatios();
 }
 
-function setBundleLen(len,el){
-  bundleLen=len;
-  document.querySelectorAll('[id^="bl-"]').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-  updateSummary();
+function updateTargetLabels(){
+  const m=multiplier;
+  document.getElementById('t1-label').textContent='Target: '+(BASE.c1*m).toFixed(3)+' kg';
+  document.getElementById('t2-label').textContent='Target: '+(BASE.c2*m).toFixed(3)+' kg';
+  document.getElementById('t3-label').textContent='Target: '+(BASE.c3*m).toFixed(3)+' kg';
+  document.getElementById('t4-label').textContent='Optional · '+(BASE.c4*m).toFixed(3)+' kg';
+  const total=(BASE.c1+BASE.c2+BASE.c3)*m;
+  document.getElementById('mult-hint').textContent=
+    m===1?'Standard batch: 5.66 kg':
+    `${m}× batch: ~${(5.66*m).toFixed(2)} kg total`;
+  // autofill hints
+  ['c1','c2','c3','c4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el.value===''){
+      el.placeholder=(i===3?'Leave blank if not used':(BASE[id]*m).toFixed(3));
+    }
+  });
 }
 
-function selectShape(shape,el){
-  prebendShape=shape;
-  document.querySelectorAll('[id^="sh-"]').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-  document.getElementById('custom-shape-name').style.display=shape==='custom'?'block':'none';
-  updateSubmit();
+function updateSubmitBtn(){
+  const c1=parseFloat(document.getElementById('c1').value);
+  const btn=document.getElementById('submit-btn');
+  if(!activeLine){btn.disabled=true;btn.textContent='Select a line first';return;}
+  if(isNaN(c1)||c1<=0){btn.disabled=true;btn.textContent='Enter amounts above';return;}
+  btn.disabled=false;btn.textContent='Record Cycle on '+activeLine;
 }
 
-/* ---- CALC ---- */
-function getCompletedMetres(){
-  if(prodType==='coil'){
-    const len=parseFloat(document.getElementById('coil-len').value);
-    const qty=parseFloat(document.getElementById('coil-qty').value)||0;
-    return (!isNaN(len)&&len>0)?len*qty:null;
-  }
-  if(prodType==='bundle'){
-    const pcs=parseFloat(document.getElementById('bundle-pcs').value);
-    const qty=parseFloat(document.getElementById('bundle-qty').value)||0;
-    if(isNaN(pcs)||pcs<=0)return null;
-    return bundleLen*pcs*qty;
-  }
-  if(prodType==='prebend'){
-    const len=parseFloat(document.getElementById('pb-len').value);
-    const qty=parseFloat(document.getElementById('pb-qty').value)||0;
-    if(isNaN(len)||len<=0)return null;
-    return len*qty;
-  }
-  return null;
-}
-
-function getPartialMetres(){
-  if(prodType==='coil'){
-    const m=parseFloat(document.getElementById('coil-partial-m').value);
-    return(!isNaN(m)&&m>0)?m:0;
-  }
-  if(prodType==='bundle'){
-    const pcs=parseFloat(document.getElementById('bundle-loose').value)||0;
-    const pcsPerBundle=parseFloat(document.getElementById('bundle-pcs').value)||0;
-    if(pcs<=0||pcsPerBundle<=0)return 0;
-    return bundleLen*pcs;
-  }
-  if(prodType==='prebend'){
-    const qty=parseFloat(document.getElementById('pb-partial-qty').value)||0;
-    const len=parseFloat(document.getElementById('pb-partial-len').value)||0;
-    return qty*len;
-  }
-  return 0;
-}
-
-function updateSummary(){
-  if(!prodType||!prodDia){document.getElementById('wt-card').style.display='none';return;}
-  const cm=getCompletedMetres();
-  const pm=getPartialMetres();
-  if(cm===null){document.getElementById('wt-card').style.display='none';updateSubmit();return;}
-
-  document.getElementById('wt-card').style.display='block';
-  let rows='';
-
-  if(prodType==='coil'){
-    const len=parseFloat(document.getElementById('coil-len').value)||0;
-    const qty=parseFloat(document.getElementById('coil-qty').value)||0;
-    rows+=`<div class="sum-row"><span>Complete coils</span><span>${qty} × ${len}m = ${cm.toFixed(0)}m</span></div>`;
-    if(pm>0)rows+=`<div class="sum-row" style="color:#92400E;"><span>Partial coil</span><span>${pm.toFixed(0)}m (pending)</span></div>`;
-  }
-  if(prodType==='bundle'){
-    const pcs=parseFloat(document.getElementById('bundle-pcs').value)||0;
-    const qty=parseFloat(document.getElementById('bundle-qty').value)||0;
-    const loose=parseFloat(document.getElementById('bundle-loose').value)||0;
-    rows+=`<div class="sum-row"><span>Complete bundles</span><span>${qty} × ${pcs}pcs × ${bundleLen}m = ${cm.toFixed(0)}m</span></div>`;
-    if(loose>0)rows+=`<div class="sum-row" style="color:#92400E;"><span>Loose pieces</span><span>${loose} pcs × ${bundleLen}m = ${pm.toFixed(0)}m (pending)</span></div>`;
-  }
-  if(prodType==='prebend'){
-    const len=parseFloat(document.getElementById('pb-len').value)||0;
-    const qty=parseFloat(document.getElementById('pb-qty').value)||0;
-    const pqty=parseFloat(document.getElementById('pb-partial-qty').value)||0;
-    const plen=parseFloat(document.getElementById('pb-partial-len').value)||0;
-    rows+=`<div class="sum-row"><span>Complete pieces</span><span>${qty} × ${len}m = ${cm.toFixed(0)}m</span></div>`;
-    if(pqty>0&&plen>0)rows+=`<div class="sum-row" style="color:#92400E;"><span>Partial pieces</span><span>${pqty} × ${plen}m = ${pm.toFixed(0)}m (pending)</span></div>`;
-  }
-
-  const total=cm+pm;
-  rows+=`<div class="sum-row total"><span>Total metres</span><span>${total.toFixed(1)}m</span></div>`;
-  document.getElementById('entry-summary').innerHTML=rows;
-  updateSubmit();
-}
-
-function updateSubmit(){
-  const btn=document.getElementById('prod-submit');
-  if(!prodType){btn.disabled=true;btn.textContent='Select type to begin';return;}
-  if(!prodDia){btn.disabled=true;btn.textContent='Select diameter';return;}
-  if(getCompletedMetres()===null){btn.disabled=true;btn.textContent='Enter quantities';return;}
-  if(prodType==='prebend'&&!prebendShape){btn.disabled=true;btn.textContent='Select prebend shape';return;}
-  if(!prodLine){btn.disabled=true;btn.textContent='Select a line';return;}
-  btn.disabled=false;btn.textContent='Record Production';
+function updateRatios(){
+  updateSubmitBtn();
+  const c1=parseFloat(document.getElementById('c1').value);
+  const c2=parseFloat(document.getElementById('c2').value);
+  const c3=parseFloat(document.getElementById('c3').value);
+  const c4v=document.getElementById('c4').value;
+  const c4=c4v!==''?parseFloat(c4v):null;
+  const card=document.getElementById('ratio-card');
+  if([c1,c2,c3].some(v=>isNaN(v)||v<=0)){card.style.display='none';return;}
+  card.style.display='block';
+  const vals={c1,c2,c3};if(c4!==null&&!isNaN(c4)&&c4>0)vals.c4=c4;
+  const total=Object.values(vals).reduce((s,v)=>s+v,0);
+  document.getElementById('batch-total').textContent=total.toFixed(3)+' kg';
+  const m=multiplier;
+  const SCALED={c1:BASE.c1*m,c2:BASE.c2*m,c3:BASE.c3*m,c4:BASE.c4*m};
+  const names={c1:'Chem 01',c2:'Chem 02',c3:'Chem 03',c4:'Chem 04'};
+  let html='';
+  Object.keys(vals).forEach(k=>{
+    const d=dev(vals[k],SCALED[k]);
+    const[cls,lbl]=badge(d);
+    const pct=Math.min(d/10*100,100);
+    const col=cls==='badge-ok'?'#1D9E75':cls==='badge-warn'?'#EF9F27':'#E24B4A';
+    html+=`<div class="ratio-row"><div class="ratio-info">
+      <div class="ratio-top"><span class="ratio-name">${names[k]}</span><span class="badge ${cls}">${lbl}</span></div>
+      <div class="ratio-sub">Got ${vals[k].toFixed(3)} · Target ${SCALED[k].toFixed(3)} · ${d.toFixed(1)}% off</div>
+      <div class="bar"><div class="bar-fill" style="width:${pct.toFixed(1)}%;background:${col};"></div></div>
+    </div></div>`;
+  });
+  if(!vals.c4)html+=`<div class="ratio-row"><div class="ratio-info"><div class="ratio-top"><span class="ratio-name">Chem 04</span><span class="badge badge-opt">Not used</span></div></div></div>`;
+  document.getElementById('ratio-content').innerHTML=html;
 }
 
 /* ---- SUBMIT ---- */
-function submitProd(){
-  if(!prodType||!prodDia||!prodLine){toast('Fill in all details','err');return;}
-  const cm=getCompletedMetres();
-  if(cm===null){toast('Enter quantities','err');return;}
-  const pm=getPartialMetres();
-  const wpm=parseFloat(document.getElementById('prod-wpm').value)||null;
-  const cm2=getCompletedMetres()||0;
-  const wt=wpm?+(wpm*cm2).toFixed(2):null;
-  const note=document.getElementById('prod-note').value.trim();
-
-  // build description
-  let desc='', partialDesc='';
-  if(prodType==='coil'){
-    const len=parseFloat(document.getElementById('coil-len').value);
-    const qty=parseInt(document.getElementById('coil-qty').value)||0;
-    desc=qty+'x coil ('+len+'m each)';
-    const pm2=parseFloat(document.getElementById('coil-partial-m').value)||0;
-    if(pm2>0)partialDesc='Partial coil: '+pm2+'m wound';
-  }
-  if(prodType==='bundle'){
-    const pcs=parseInt(document.getElementById('bundle-pcs').value);
-    const qty=parseInt(document.getElementById('bundle-qty').value)||0;
-    const loose=parseInt(document.getElementById('bundle-loose').value)||0;
-    desc=qty+' bundles of '+pcs+' pcs @ '+bundleLen+'m';
-    if(loose>0)partialDesc=loose+' loose pieces @ '+bundleLen+'m';
-  }
-  if(prodType==='prebend'){
-    const len=parseFloat(document.getElementById('pb-len').value);
-    const qty=parseInt(document.getElementById('pb-qty').value)||0;
-    const shapeName=prebendShape==='custom'?(document.getElementById('custom-shape-name').value||'Custom shape'):prebendShape;
-    desc=qty+'x '+shapeName+' ('+len+'m each)';
-    const pqty=parseInt(document.getElementById('pb-partial-qty').value)||0;
-    const plen=parseFloat(document.getElementById('pb-partial-len').value)||0;
-    if(pqty>0&&plen>0)partialDesc=pqty+' partial '+shapeName+' @ '+plen+'m each';
-    prebendShape=shapeName;
-  }
-
-  const id='p_'+Date.now();
+function submitBatch(){
+  if(!activeLine){toast('Select a line first','err');return;}
+  const c1=parseFloat(document.getElementById('c1').value);
+  const c2=parseFloat(document.getElementById('c2').value);
+  const c3=parseFloat(document.getElementById('c3').value);
+  const c4v=document.getElementById('c4').value;
+  const c4=c4v!==''?parseFloat(c4v):null;
+  if([c1,c2,c3].some(v=>isNaN(v)||v<=0)){toast('Fill in Chem 01, 02 and 03','err');return;}
+  const vals={c1,c2,c3};if(c4!==null&&!isNaN(c4)&&c4>0)vals.c4=c4;
+  const total=+Object.values(vals).reduce((s,v)=>s+v,0).toFixed(4);
+  const m=multiplier;
+  const SCALED={c1:BASE.c1*m,c2:BASE.c2*m,c3:BASE.c3*m,c4:BASE.c4*m};
+  const alerts=Object.keys(vals).filter(k=>dev(vals[k],SCALED[k])>5).length;
+  const id='e_'+Date.now();
   const date=istDate(); const time=istTime();
-  const entry={
-    id, date, time, line:prodLine,
-    type:prodType, diameter:prodDia,
-    completed_metres:+cm.toFixed(2),
-    partial_metres:+pm.toFixed(2),
-    total_metres:+(cm+pm).toFixed(2),
-    kg:wt, desc, partial_desc:partialDesc,
-    has_partial:pm>0, partial_closed:false,
-    note
-  };
-
+  const entry={id,type:'cycle',date,time,line:activeLine,multiplier:m,c1,c2,c3,c4:vals.c4||null,total,alerts};
   cache.push(entry); saveCache();
-  updatePendingBadge();
-
-  const btn=document.getElementById('prod-submit');
-  btn.disabled=true; btn.textContent='Saving...';
-
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({...entry,sheet:'Production',timestamp:date+' '+time+' IST'})})
-    .then(r=>r.json()).then(()=>toast('Saved to Google Sheet ✓','ok'))
-    .catch(()=>toast('Saved locally — sync when online'));
-
-  // reset
-  setTimeout(()=>{
-    ['coil-len','coil-qty','coil-partial-m','bundle-pcs','bundle-qty','bundle-loose',
-     'pb-len','pb-qty','pb-partial-qty','pb-partial-len','prod-wpm','prod-note','custom-shape-name']
-    .forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
-    document.getElementById('wt-card').style.display='none';
-    document.getElementById('entry-summary').innerHTML='';
-    document.getElementById('wpm-calc-row').style.display='none';
-    btn.disabled=false; btn.textContent='Record Production';
-    updateSubmit();
-  },300);
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;btn.textContent='Saving…';
+  const payload={...entry,timestamp:date+' '+time+' IST'};
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(r=>r.json()).then(()=>{toast('Saved to Google Sheet ✓','ok');resetForm();})
+    .catch(()=>{toast('Saved locally — sync when online');resetForm();});
 }
 
-/* ---- WPM CALC ---- */
-function calcKgFromWpm(){
-  const wpm=parseFloat(document.getElementById('prod-wpm').value);
-  const cm=getCompletedMetres()||0;
-  const pm=getPartialMetres()||0;
-  const row=document.getElementById('wpm-calc-row');
-  const txt=document.getElementById('wpm-calc-text');
-  if(isNaN(wpm)||wpm<=0||cm<=0){row.style.display='none';return;}
-  const completedKg=(wpm*cm).toFixed(2);
-  const totalKg=(wpm*(cm+pm)).toFixed(2);
-  let msg='Completed: '+cm.toFixed(1)+'m × '+wpm+' kg/m = '+completedKg+' kg';
-  if(pm>0) msg+=' · Total incl. partial: '+totalKg+' kg';
-  txt.textContent=msg;
-  row.style.display='block';
+function resetForm(){
+  ['c1','c2','c3','c4'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ratio-card').style.display='none';
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=false;btn.textContent='Record Cycle on '+activeLine;
+  updateTargetLabels();
 }
 
-/* ---- PENDING ---- */
-function updatePendingBadge(){
-  const n=cache.filter(e=>e.has_partial&&!e.partial_closed).length;
-  document.getElementById('pending-badge').textContent=n>0?'('+n+')':'';
-}
-
-function renderPending(){
-  const items=cache.filter(e=>e.has_partial&&!e.partial_closed);
-  if(!items.length){document.getElementById('pending-list').innerHTML='<div class="empty">No pending items 👍<br>All stock is fully packed.</div>';return;}
+/* ---- EDIT / DELETE ---- */
+function openEdit(id){
+  const entry=cache.find(e=>e.id===id);
+  if(!entry)return;
+  editingEntry={...entry};
   let html='';
-  [...items].reverse().forEach(e=>{
-    html+=`<div class="pending-item">
-      <div class="pending-header">
-        <span class="pending-title">${e.diameter}mm — ${e.desc}</span>
-        <button class="complete-btn" onclick="openCompleteModal('${e.id}')">Complete</button>
+  ['c1','c2','c3'].forEach((k,i)=>{
+    html+=`<div class="field"><label>Chem 0${i+1} (kg)</label>
+    <input type="number" id="edit-${k}" step="0.001" value="${entry[k]||''}" inputmode="decimal"></div>`;
+  });
+  html+=`<div class="field"><label>Chem 04 (kg) <span style="color:var(--green);">Optional</span></label>
+  <input type="number" id="edit-c4" step="0.001" value="${entry.c4||''}" inputmode="decimal"></div>`;
+  document.getElementById('edit-fields').innerHTML=html;
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal(){
+  document.getElementById('edit-modal').classList.remove('open');
+  editingEntry=null;
+}
+
+function saveEdit(){
+  if(!editingEntry)return;
+  const c1=parseFloat(document.getElementById('edit-c1').value);
+  const c2=parseFloat(document.getElementById('edit-c2').value);
+  const c3=parseFloat(document.getElementById('edit-c3').value);
+  const c4v=document.getElementById('edit-c4').value;
+  const c4=c4v!==''?parseFloat(c4v):null;
+  if([c1,c2,c3].some(v=>isNaN(v)||v<=0)){toast('Fill in all required fields','err');return;}
+  const vals={c1,c2,c3};if(c4!==null&&!isNaN(c4)&&c4>0)vals.c4=c4;
+  const total=+Object.values(vals).reduce((s,v)=>s+v,0).toFixed(4);
+  const m=editingEntry.multiplier||1;
+  const SCALED={c1:BASE.c1*m,c2:BASE.c2*m,c3:BASE.c3*m,c4:BASE.c4*m};
+  const alerts=Object.keys(vals).filter(k=>dev(vals[k],SCALED[k])>5).length;
+  const updated={...editingEntry,...vals,c4:vals.c4||null,total,alerts,edited:true};
+  cache=cache.map(e=>e.id===editingEntry.id?updated:e);
+  saveCache();
+  const payload={...updated,timestamp:updated.date+' '+updated.time+' IST',action:'edit'};
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(()=>toast('Correction saved ✓','ok')).catch(()=>toast('Saved locally','ok'));
+  closeEditModal();
+  if(document.getElementById('ft-'+updated.line).classList.contains('active'))setFilter(updated.line);
+}
+
+function deleteEntry(){
+  if(!editingEntry)return;
+  if(!confirm('Delete this entry?'))return;
+  const payload={...editingEntry,action:'delete',timestamp:editingEntry.date+' '+editingEntry.time+' IST'};
+  cache=cache.filter(e=>e.id!==editingEntry.id);
+  saveCache();
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(()=>toast('Entry deleted','ok')).catch(()=>toast('Deleted locally','ok'));
+  closeEditModal();
+  const activeF=document.querySelector('.line-filter-btn.active');
+  if(activeF)setFilter(activeF.textContent.trim());
+}
+
+/* ---- WASTE ---- */
+function selectWasteLine(el,line){
+  wasteLine=line;
+  document.querySelectorAll('#waste-line-grid .line-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function setWaste(v){document.getElementById('waste-kg').value=v;}
+
+function submitWaste(){
+  if(!wasteLine){toast('Select a line first','err');return;}
+  const kg=parseFloat(document.getElementById('waste-kg').value);
+  if(isNaN(kg)||kg<=0){toast('Enter waste amount','err');return;}
+  const note=document.getElementById('waste-note').value.trim();
+  const id='w_'+Date.now();
+  const date=istDate();const time=istTime();
+  const entry={id,type:'waste',date,time,line:wasteLine,waste_kg:kg,note};
+  cache.push(entry);saveCache();
+  const payload={...entry,timestamp:date+' '+time+' IST'};
+  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
+    .then(()=>toast('Waste recorded ✓','ok')).catch(()=>toast('Saved locally','ok'));
+  document.getElementById('waste-kg').value='';
+  document.getElementById('waste-note').value='';
+  renderWaste();
+}
+
+function renderWaste(){
+  const td=today();
+  const wasteToday=cache.filter(e=>e.type==='waste'&&e.date===td);
+  if(!wasteToday.length){
+    document.getElementById('waste-log').innerHTML='<div class="empty">No waste recorded today</div>';
+    document.getElementById('waste-summary').innerHTML='<div class="empty">No data yet</div>';
+    return;
+  }
+  let html='';
+  [...wasteToday].reverse().forEach(w=>{
+    html+=`<div class="log-item">
+      <div>
+        <div class="log-time">${w.time} <span class="lb lb-${w.line}">${w.line}</span> <span class="badge badge-waste">Waste</span></div>
+        ${w.note?`<div class="log-vals">${w.note}</div>`:''}
       </div>
-      <div class="pending-sub">${e.partial_desc} · ${e.partial_metres}m pending · from ${e.date} ${e.time.slice(0,5)}</div>
-      <div style="font-size:11px;color:var(--sub);">Line ${e.line}${e.note?' · '+e.note:''}</div>
+      <div class="log-kg">${w.waste_kg.toFixed(2)}<br><span style="font-size:10px;font-weight:400;color:var(--sub);">kg</span></div>
     </div>`;
   });
-  document.getElementById('pending-list').innerHTML=html;
+  document.getElementById('waste-log').innerHTML=html;
+  // summary
+  const cycles=cache.filter(e=>e.type==='cycle'&&e.date===td);
+  const totalProd=cycles.reduce((s,e)=>s+parseFloat(e.total||0),0);
+  const totalWaste=wasteToday.reduce((s,e)=>s+parseFloat(e.waste_kg||0),0);
+  const net=totalProd-totalWaste;
+  document.getElementById('waste-summary').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;color:var(--sub);">Total mixed today</span>
+        <span style="font-size:15px;font-weight:600;">${totalProd.toFixed(2)} kg</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;color:var(--sub);">Total wasted</span>
+        <span style="font-size:15px;font-weight:600;color:#A32D2D;">${totalWaste.toFixed(2)} kg</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;">
+        <span style="font-size:13px;font-weight:600;">Net in production</span>
+        <span style="font-size:18px;font-weight:700;color:var(--green);">${net.toFixed(2)} kg</span>
+      </div>
+      <div style="font-size:12px;color:var(--sub);padding-top:4px;">
+        Waste = ${totalProd>0?(totalWaste/totalProd*100).toFixed(1):0}% of total mixed
+      </div>
+    </div>`;
 }
 
-function openCompleteModal(id){
-  completingId=id;
-  const e=cache.find(x=>x.id===id);
-  document.getElementById('modal-title').textContent='Complete: '+e.diameter+'mm '+e.type;
-  document.getElementById('modal-sub').textContent=e.partial_desc+' ('+e.partial_metres+'m)';
-  const isCoil = e.type==='coil';
-  const pcsLabel = isCoil ? 'New metres added to complete this coil' : 'New pieces added to complete this bundle';
-  const pcsPlaceholder = isCoil ? 'e.g. 33 metres wound today' : 'e.g. 7 new pieces added to the '+e.partial_metres+'m loose';
-  const looseSummary = isCoil
-    ? 'Pending: '+e.partial_metres+'m already wound'
-    : 'Pending: '+e.partial_metres+'m ('+e.partial_desc+')';
-  document.getElementById('modal-body').innerHTML=`
-    <div style="background:var(--amber-light);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#92400E;">
-      ${looseSummary}
-    </div>
-    <div class="field"><label>${pcsLabel} <span>only the NEW production today</span></label>
-    <input type="number" id="comp-new-pcs" step="1" placeholder="${pcsPlaceholder}" inputmode="numeric"></div>
-    <div class="field"><label>Weight of completed batch (kg/m) <span>optional — weight per metre</span></label>
-    <input type="number" id="comp-kg" step="0.001" placeholder="e.g. 0.290 kg/m" inputmode="decimal"></div>
-    <div class="field"><label>Note <span>optional</span></label>
-    <input type="text" id="comp-note" placeholder="e.g. packed morning shift June 13"></div>`;
-  document.getElementById('complete-modal').classList.add('open');
-}
-
-function closeModal(){document.getElementById('complete-modal').classList.remove('open');completingId=null;}
-
-function saveComplete(){
-  const e=cache.find(x=>x.id===completingId);
-  if(!e)return;
-  const newPcs=parseFloat(document.getElementById('comp-new-pcs').value)||0;
-  const kg=parseFloat(document.getElementById('comp-kg').value)||null;
-  const note=document.getElementById('comp-note').value.trim();
-  const opName=currentOperator?currentOperator.name:'Unknown';
-
-  // Work out how many new metres the NEW pieces contribute
-  let newMetres=0;
-  let bundleLenUsed=e.bundle_len||bundleLen||12;
-  if(e.type==='bundle') newMetres=+(newPcs*bundleLenUsed).toFixed(2);
-  if(e.type==='prebend') newMetres=+(newPcs*(e.piece_len||parseFloat(document.getElementById('comp-new-pcs').value)||0)).toFixed(2);
-  if(e.type==='coil') newMetres=+(newPcs).toFixed(2); // for coil, user enters metres not pieces
-
-  // Total metres of the completed batch = loose pending metres + new metres
-  const totalBatchMetres=+(e.partial_metres+newMetres).toFixed(2);
-
-  // Mark original entry as closed
-  e.partial_closed=true;
-  e.completion={
-    date:istDate(),time:istTime(),
-    new_pieces:newPcs,new_metres:newMetres,
-    total_batch_metres:totalBatchMetres,
-    kg,note,operator:opName
-  };
-  saveCache();
-
-  const date=istDate(); const time=istTime();
-
-  // 1. Send UPDATE for original entry to sheet (mark partial_closed=true)
-  const updatePayload={
-    ...e,
-    sheet:'Production',
-    action:'close_partial',
-    timestamp:date+' '+time+' IST',
-    operator:opName
-  };
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(updatePayload)}).catch(()=>{});
-
-  // 2. If new pieces were added, log them as a fresh production entry
-  if(newPcs>0){
-    const newId='p_'+Date.now();
-    const newEntry={
-      id:newId,
-      date,time,
-      line:e.line,
-      type:e.type,
-      diameter:e.diameter,
-      completed_metres:newMetres,
-      partial_metres:0,
-      total_metres:newMetres,
-      kg:null,
-      desc:newPcs+' new pcs → completes batch with '+e.partial_metres+'m loose ('+e.partial_desc+')',
-      partial_desc:'',
-      has_partial:false,
-      partial_closed:true,
-      note:note||('Completion of: '+e.desc),
-      operator:opName
-    };
-    cache.push(newEntry);
-    saveCache();
-    // Send new entry to sheet
-    fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({
-      ...newEntry,
-      sheet:'Production',
-      timestamp:date+' '+time+' IST'
-    })}).catch(()=>{});
-  }
-
-  // 3. Log a completion summary entry so sheet shows full picture
-  const summaryId='pc_'+Date.now();
-  const summaryEntry={
-    id:summaryId,
-    date,time,
-    line:e.line,
-    type:e.type,
-    diameter:e.diameter,
-    completed_metres:totalBatchMetres,
-    partial_metres:0,
-    total_metres:totalBatchMetres,
-    kg:kg||null,
-    desc:'BATCH COMPLETE: '+e.partial_metres+'m ('+e.partial_desc+') + '+newMetres+'m new = '+totalBatchMetres+'m total',
-    partial_desc:'',
-    has_partial:false,
-    partial_closed:true,
-    note:note,
-    operator:opName,
-    entry_type:'batch_completion',
-    original_id:e.id
-  };
-  cache.push(summaryEntry);
-  saveCache();
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({
-    ...summaryEntry,
-    sheet:'Production',
-    timestamp:date+' '+time+' IST'
-  })}).catch(()=>{});
-
-  toast('Batch completed ✓ — saved to sheet','ok');
-  closeModal();
-  updatePendingBadge();
-  renderPending();
-}
-
-/* ---- STOCK ---- */
-function renderStock(){
-  const completed=cache.filter(e=>!e.has_partial||e.partial_closed);
-  const byDia={};const byType={coil:{m:0,kg:0},bundle:{m:0,kg:0},prebend:{m:0,kg:0}};
-  let totalM=0,totalKg=0;
-  completed.forEach(e=>{
-    const d=e.diameter,m=parseFloat(e.completed_metres||0),kg=parseFloat(e.kg||0);
-    if(!byDia[d])byDia[d]={m:0,kg:0,coil:0,bundle:0,prebend:0};
-    byDia[d].m+=m; byDia[d].kg+=kg;
-    if(e.type&&byDia[d][e.type]!==undefined)byDia[d][e.type]+=m;
-    if(byType[e.type]){byType[e.type].m+=m;byType[e.type].kg+=kg;}
-    totalM+=m; totalKg+=kg;
-  });
-  document.getElementById('s-total-m').innerHTML=totalM.toFixed(0)+' <span class="metric-unit">m</span>';
-  document.getElementById('s-total-kg').innerHTML=(totalKg>0?totalKg.toFixed(0):'N/A')+' <span class="metric-unit">'+(totalKg>0?'kg':'(not weighed)')+'</span>';
-  let diaHtml='';
-  DIAS.filter(d=>byDia[d]).forEach(d=>{
-    const r=byDia[d];
-    const bd=[];
-    if(r.coil>0)bd.push('Coil:'+r.coil.toFixed(0)+'m');
-    if(r.bundle>0)bd.push('Bundle:'+r.bundle.toFixed(0)+'m');
-    if(r.prebend>0)bd.push('Prebend:'+r.prebend.toFixed(0)+'m');
-    diaHtml+=`<tr><td><span class="dia-pill">${d}mm</span></td><td><b>${r.m.toFixed(0)}</b>m</td><td>${r.kg>0?r.kg.toFixed(0)+'kg':'—'}</td><td style="font-size:11px;color:var(--sub);">${bd.join(' · ')}</td></tr>`;
-  });
-  document.getElementById('stock-by-dia').innerHTML=diaHtml||'<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--sub);">No completed stock yet</td></tr>';
-  const typeNames={coil:'🔄 Coil',bundle:'📦 Bundle',prebend:'📐 Prebend'};
-  let typeHtml='';
-  Object.keys(byType).forEach(t=>{if(byType[t].m>0)typeHtml+=`<tr><td>${typeNames[t]}</td><td><b>${byType[t].m.toFixed(0)}</b>m</td><td>${byType[t].kg>0?byType[t].kg.toFixed(0)+'kg':'—'}</td></tr>`;});
-  document.getElementById('stock-by-type').innerHTML=typeHtml||'<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--sub);">No stock yet</td></tr>';
+/* ---- TABS ---- */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['log','today','all','waste'][i]===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='all')loadAll();
+  if(name==='waste')renderWaste();
 }
 
 /* ---- TODAY ---- */
-function renderToday(){
+function setFilter(line){
+  document.querySelectorAll('.line-filter-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('ft-'+line).classList.add('active');
+  document.getElementById('today-title').textContent='Line '+line+' — Today';
+  fetch(SCRIPT_URL).then(r=>r.json()).then(d=>{
+    const all=[...d.data||[],...cache.filter(e=>e.type==='cycle')];
+    const seen=new Set();const deduped=all.filter(r=>{if(seen.has(r.id))return false;seen.add(r.id);return true;});
+    renderToday(deduped,line);
+  }).catch(()=>renderToday(cache.filter(e=>e.type==='cycle'),line));
+}
+
+function renderToday(data,line){
   const td=today();
-  const rows=cache.filter(e=>e.date===td);
-  document.getElementById('td-count').textContent=rows.length;
-  const tm=rows.reduce((s,r)=>s+parseFloat(r.total_metres||0),0);
-  const tkg=rows.filter(r=>r.kg).reduce((s,r)=>s+parseFloat(r.kg||0),0);
-  const pend=rows.filter(r=>r.has_partial&&!r.partial_closed).length;
-  document.getElementById('td-m').innerHTML=tm.toFixed(0)+' <span class="metric-unit">m</span>';
-  document.getElementById('td-kg').innerHTML=tkg>0?tkg.toFixed(0)+' <span class="metric-unit">kg</span>':'<span class="metric-unit">not weighed</span>';
-  document.getElementById('td-pend').textContent=pend||'0';
-  if(!rows.length){document.getElementById('today-log').innerHTML='<div class="empty">Nothing logged today yet</div>';return;}
+  const rows=data.filter(r=>r.line===line&&(r.date===td||(r.timestamp||'').slice(0,10)===td)&&r.type!=='waste');
+  document.getElementById('td-c').textContent=rows.length;
+  const tot=rows.reduce((s,r)=>s+parseFloat(r.total||0),0);
+  document.getElementById('td-t').innerHTML=tot.toFixed(2)+' <span class="metric-unit">kg</span>';
+  document.getElementById('td-a').innerHTML=rows.length?(tot/rows.length).toFixed(3)+' <span class="metric-unit">kg</span>':'—';
+  const al=rows.reduce((s,r)=>s+parseInt(r.alerts||0),0);
+  const alEl=document.getElementById('td-al');
+  alEl.textContent=al;alEl.style.color=al>0?'#A32D2D':'var(--text)';
+  if(!rows.length){document.getElementById('today-log').innerHTML=`<div class="empty">No cycles on ${line} today</div>`;return;}
   let html='';
   [...rows].reverse().forEach(r=>{
-    const tag=r.type==='coil'?'tag-coil':r.type==='bundle'?'tag-bundle':'tag-prebend';
-    const label=r.type||'';
+    const timeStr=r.time||(r.timestamp||'').slice(11,16)||'—';
+    const c4str=r.c4?` · C4:${parseFloat(r.c4).toFixed(3)}`:'';
+    const al=parseInt(r.alerts||0);
+    const mStr=r.multiplier&&r.multiplier!==1?` <span class="badge badge-edit">${r.multiplier}×</span>`:'';
+    const editStr=r.edited?' <span class="badge badge-edit">Edited</span>':'';
     html+=`<div class="log-item">
       <div style="flex:1;">
-        <div class="log-time">${r.time||''} <span class="type-tag ${tag}">${label}</span> <span class="dia-pill" style="font-size:10px;">${r.diameter}mm</span> ${r.line?'<span style="font-size:10px;color:var(--sub);">'+r.line+'</span>':''}</div>
-        <div class="log-desc">${r.desc||''}</div>
-        ${r.has_partial&&!r.partial_closed?'<span class="type-tag tag-partial">'+r.partial_desc+' pending</span>':''}
-        ${r.has_partial&&r.partial_closed?'<span class="type-tag tag-complete">partial completed</span>':''}
-        ${r.note?'<div class="log-sub">'+r.note+'</div>':''}
+        <div class="log-time">${timeStr} <span class="lb lb-${r.line}">${r.line}</span>${mStr}${editStr}</div>
+        <div class="log-vals">C1:${parseFloat(r.c1).toFixed(3)} · C2:${parseFloat(r.c2).toFixed(3)} · C3:${parseFloat(r.c3).toFixed(3)}${c4str}</div>
+        ${al>0?`<span class="badge badge-warn" style="margin-top:4px;display:inline-block;font-size:10px;">${al} alert${al>1?'s':''}</span>`:''}
+        ${r.id?`<div class="log-actions"><button class="act-btn act-edit" onclick="openEdit('${r.id}')">Edit</button><button class="act-btn act-del" onclick="openEditDel('${r.id}')">Delete</button></div>`:''}
       </div>
-      <div class="log-right">
-        <div class="log-m">${parseFloat(r.completed_metres||0).toFixed(0)}m</div>
-        <div class="log-kg">${r.kg?r.kg+'kg':'not weighed'}</div>
-      </div>
+      <div class="log-kg">${parseFloat(r.total).toFixed(3)}<br><span style="font-size:10px;font-weight:400;color:var(--sub);">kg</span></div>
     </div>`;
   });
   document.getElementById('today-log').innerHTML=html;
 }
 
-/* ---- HISTORY ---- */
-function setHistFilter(f,el){
-  histFilter=f;
-  document.querySelectorAll('#hist-filter-grid .dia-btn').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-  renderHistory();
+function openEditDel(id){
+  const entry=cache.find(e=>e.id===id);
+  if(!entry)return;
+  editingEntry={...entry};
+  if(confirm('Delete this entry?'))deleteEntry();
 }
 
-function renderHistory(){
-  let rows=histFilter==='all'?[...cache]:cache.filter(e=>e.diameter===histFilter);
-  rows.sort((a,b)=>b.date.localeCompare(a.date));
-  if(!rows.length){document.getElementById('history-log').innerHTML='<div class="empty">No entries yet</div>';return;}
-  const byDate={};
-  rows.forEach(r=>{if(!byDate[r.date])byDate[r.date]=[];byDate[r.date].push(r);});
+/* ---- ALL LINES ---- */
+function loadAll(){
+  document.getElementById('line-cards').innerHTML='<div class="empty">Loading…</div>';
+  fetch(SCRIPT_URL).then(r=>r.json()).then(d=>renderAll(d.data||[])).catch(()=>renderAll(cache));
+}
+
+function renderAll(data){
+  const td=today();
+  const todayData=data.filter(r=>(r.date===td||(r.timestamp||'').slice(0,10)===td)&&r.type!=='waste');
+  document.getElementById('all-c').textContent=todayData.length;
+  const tot=todayData.reduce((s,r)=>s+parseFloat(r.total||0),0);
+  document.getElementById('all-t').innerHTML=tot.toFixed(2)+' <span class="metric-unit">kg</span>';
   let html='';
-  Object.keys(byDate).sort().reverse().forEach(date=>{
-    const dr=byDate[date];
-    const dm=dr.reduce((s,r)=>s+parseFloat(r.completed_metres||0),0);
-    html+=`<div style="margin-bottom:4px;">
-      <div style="display:flex;justify-content:space-between;padding:6px 0;">
-        <span style="font-size:12px;font-weight:600;color:var(--sub);">${date}</span>
-        <span style="font-size:12px;color:var(--sub);">${dm.toFixed(0)}m completed</span>
+  LINES.forEach(line=>{
+    const rows=todayData.filter(r=>r.line===line);
+    const lt=rows.reduce((s,r)=>s+parseFloat(r.total||0),0);
+    const al=rows.reduce((s,r)=>s+parseInt(r.alerts||0),0);
+    html+=`<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span class="lb lb-${line}" style="font-size:15px;font-weight:700;padding:4px 12px;">${line}</span>
+        ${al>0?`<span class="badge badge-warn">${al} alert${al>1?'s':''}</span>`:'<span class="badge badge-ok">All OK</span>'}
       </div>
-      <div class="card" style="padding:0 16px;">`;
-    dr.forEach(r=>{
-      const tag=r.type==='coil'?'tag-coil':r.type==='bundle'?'tag-bundle':'tag-prebend';
-      html+=`<div class="log-item">
-        <div style="flex:1;">
-          <div class="log-time">${r.time||''} <span class="type-tag ${tag}">${r.type||''}</span> <span class="dia-pill" style="font-size:10px;">${r.diameter}mm</span></div>
-          <div class="log-desc">${r.desc||''}</div>
-          ${r.has_partial&&!r.partial_closed?'<span class="type-tag tag-partial">'+r.partial_desc+' — pending</span>':''}
-        </div>
-        <div class="log-right">
-          <div class="log-m">${parseFloat(r.completed_metres||0).toFixed(0)}m</div>
-          <div class="log-kg">${r.kg?r.kg+'kg':'—'}</div>
-        </div>
-      </div>`;
-    });
-    html+='</div></div>';
-  });
-  document.getElementById('history-log').innerHTML=html;
-}
-
-function switchTab(name){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['log','pending','stock','today','history'][i]===name));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+name).classList.add('active');
-  if(name==='pending')renderPending();
-  if(name==='stock')renderStock();
-  if(name==='today')renderToday();
-  if(name==='history')renderHistory();
-}
-
-// init
-updatePendingBadge();
-
-/* ========== OPERATOR / PIN SYSTEM ========== */
-let operators = [];
-let adminPin = '0000';
-let currentOperator = null;
-let pinBuffer = '';
-
-try {
-  const saved = JSON.parse(localStorage.getItem('du_operators')||'[]');
-  if(saved.length) operators = saved;
-  adminPin = localStorage.getItem('du_admin_pin')||'0000';
-  const savedOp = localStorage.getItem('du_current_op');
-  if(savedOp) currentOperator = JSON.parse(savedOp);
-} catch(e) {}
-
-function saveOperators(){ localStorage.setItem('du_operators', JSON.stringify(operators)); }
-
-function initAuth(){
-  const sessionDate = localStorage.getItem('du_session_date');
-  const todayDate = istDate();
-  // Force re-login every new day or if no operator saved
-  if(!currentOperator || sessionDate !== todayDate){
-    currentOperator = null;
-    localStorage.removeItem('du_current_op');
-    document.getElementById('pin-overlay').classList.add('open');
-  } else {
-    showOperatorBar();
-  }
-}
-
-function pinPress(d){
-  if(pinBuffer.length>=4) return;
-  pinBuffer += d;
-  updatePinDots();
-  if(pinBuffer.length===4) setTimeout(checkPin, 150);
-}
-
-function pinDel(){
-  pinBuffer = pinBuffer.slice(0,-1);
-  updatePinDots();
-  document.getElementById('pin-error').textContent='';
-}
-
-function updatePinDots(){
-  for(let i=0;i<4;i++){
-    document.getElementById('pd'+i).classList.toggle('filled', i<pinBuffer.length);
-  }
-}
-
-function checkPin(){
-  // Check admin PIN first
-  if(pinBuffer === adminPin){
-    currentOperator = {name:'Admin', pin:adminPin, isAdmin:true};
-    localStorage.setItem('du_current_op', JSON.stringify(currentOperator));
-    localStorage.setItem('du_session_date', istDate());
-    document.getElementById('pin-overlay').classList.remove('open');
-    showOperatorBar();
-    pinBuffer=''; updatePinDots();
-    return;
-  }
-  // Check operator PINs
-  const op = operators.find(o=>o.pin===pinBuffer);
-  if(op){
-    currentOperator = op;
-    localStorage.setItem('du_current_op', JSON.stringify(currentOperator));
-    localStorage.setItem('du_session_date', istDate());
-    document.getElementById('pin-overlay').classList.remove('open');
-    showOperatorBar();
-    pinBuffer=''; updatePinDots();
-    document.getElementById('pin-error').textContent='';
-  } else {
-    document.getElementById('pin-error').textContent='Incorrect PIN. Try again.';
-    pinBuffer=''; updatePinDots();
-  }
-}
-
-function showOperatorBar(){
-  document.getElementById('operator-bar').style.display='flex';
-  document.getElementById('op-name-bar').textContent = currentOperator ? currentOperator.name : '—';
-}
-
-function logout(){
-  currentOperator = null;
-  localStorage.removeItem('du_current_op');
-  localStorage.removeItem('du_session_date');
-  pinBuffer='';
-  updatePinDots();
-  document.getElementById('pin-error').textContent='';
-  document.getElementById('pin-sub').textContent='Enter your PIN to continue';
-  document.getElementById('operator-bar').style.display='none';
-  document.getElementById('pin-overlay').classList.add('open');
-}
-
-function addOperator(){
-  const name = document.getElementById('new-op-name').value.trim();
-  const pin  = document.getElementById('new-op-pin').value.trim();
-  if(!name || pin.length!==4 || isNaN(pin)){ toast('Enter name and 4-digit PIN','err'); return; }
-  if(operators.find(o=>o.pin===pin)){ toast('PIN already in use','err'); return; }
-  if(pin===adminPin){ toast('PIN matches admin PIN — choose another','err'); return; }
-  operators.push({name, pin});
-  saveOperators();
-  document.getElementById('new-op-name').value='';
-  document.getElementById('new-op-pin').value='';
-  renderOperatorList();
-  toast(name+' added ✓','ok');
-}
-
-function removeOperator(pin){
-  if(!confirm('Remove this operator?')) return;
-  operators = operators.filter(o=>o.pin!==pin);
-  saveOperators();
-  renderOperatorList();
-  toast('Operator removed','ok');
-}
-
-function changeAdminPin(){
-  const np = document.getElementById('new-admin-pin').value.trim();
-  if(np.length!==4||isNaN(np)){ toast('Enter a valid 4-digit PIN','err'); return; }
-  adminPin=np;
-  localStorage.setItem('du_admin_pin', adminPin);
-  document.getElementById('new-admin-pin').value='';
-  toast('Admin PIN updated ✓','ok');
-}
-
-function renderOperatorList(){
-  if(!operators.length){
-    document.getElementById('operator-list').innerHTML='<div class="empty" style="padding:16px 0;">No operators added yet</div>';
-    return;
-  }
-  let html='';
-  operators.forEach(o=>{
-    html+=`<div class="admin-item">
-      <div><div class="admin-name">${o.name}</div><div class="admin-pin">PIN: ${o.pin}</div></div>
-      <button class="del-op-btn" onclick="removeOperator('${o.pin}')">Remove</button>
+      <div style="display:flex;gap:16px;">
+        <div><div style="font-size:11px;color:var(--sub);text-transform:uppercase;">Cycles</div><div style="font-size:20px;font-weight:600;">${rows.length}</div></div>
+        <div><div style="font-size:11px;color:var(--sub);text-transform:uppercase;">Total</div><div style="font-size:20px;font-weight:600;">${lt.toFixed(2)}<span style="font-size:12px;font-weight:400;color:var(--sub);"> kg</span></div></div>
+        <div><div style="font-size:11px;color:var(--sub);text-transform:uppercase;">Avg</div><div style="font-size:20px;font-weight:600;">${rows.length?(lt/rows.length).toFixed(2):'—'}<span style="font-size:12px;font-weight:400;color:var(--sub);"> kg</span></div></div>
+      </div>
     </div>`;
   });
-  document.getElementById('operator-list').innerHTML=html;
+  document.getElementById('line-cards').innerHTML=html||'<div class="empty">No data today yet</div>';
 }
-
-/* ========== MACHINE EVENTS ========== */
-let meLine = null;
-let machineEvents = [];
-try{ machineEvents = JSON.parse(localStorage.getItem('du_machine_v1')||'[]'); }catch(e){}
-function saveMachineEvents(){ localStorage.setItem('du_machine_v1', JSON.stringify(machineEvents)); }
-
-function selectMeLine(line, el){
-  meLine = line;
-  document.querySelectorAll('[id^="me-"]').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-function logEvent(type){
-  const isPowerEvent = type==='power_failure'||type==='power_restored';
-  if(!isPowerEvent && !meLine){ toast('Select a line first','err'); return; }
-  if(type==='breakdown'){
-    document.getElementById('breakdown-reason-box').style.display='block';
-    document.getElementById('breakdown-reason').focus();
-    return;
-  }
-  saveEvent(type, isPowerEvent?'ALL':meLine, '');
-}
-
-function confirmBreakdown(){
-  if(!meLine){ toast('Select a line first','err'); return; }
-  const reason = document.getElementById('breakdown-reason').value.trim();
-  if(!reason){ toast('Enter breakdown reason','err'); return; }
-  saveEvent('breakdown', meLine, reason);
-  document.getElementById('breakdown-reason').value='';
-  document.getElementById('breakdown-reason-box').style.display='none';
-}
-
-function saveEvent(type, line, reason){
-  const id = 'ev_'+Date.now();
-  const date = istDate(); const time = istTime();
-  const opName = currentOperator ? currentOperator.name : 'Unknown';
-  const event = { id, date, time, type, line, reason, operator:opName };
-  machineEvents.push(event);
-  saveMachineEvents();
-
-  const labels = {
-    start:'Machine Start', stop:'Machine Stop',
-    breakdown:'Breakdown Started', restored:'Breakdown Fixed',
-    power_failure:'Power Failure', power_restored:'Power Restored'
-  };
-  toast((labels[type]||type)+' logged ✓','ok');
-
-  // Send to Google Sheet
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({...event, sheet:'MachineLog', timestamp:date+' '+time+' IST'})})
-    .catch(()=>{});
-
-  renderMachineLog();
-  renderActiveEvents();
-}
-
-function getDowntime(startTime, endTime){
-  // Both are HH:MM:SS strings
-  const toSec = t => { const p=t.split(':'); return +p[0]*3600 + +p[1]*60 + (+p[2]||0); };
-  const diff = toSec(endTime) - toSec(startTime);
-  if(diff<=0) return '—';
-  const h = Math.floor(diff/3600);
-  const m = Math.floor((diff%3600)/60);
-  return h>0 ? h+'h '+m+'m' : m+'m';
-}
-
-function renderActiveEvents(){
-  const td = today();
-  const todayEvents = machineEvents.filter(e=>e.date===td);
-  const active = [];
-
-  // Find open breakdowns per line
-  const lines = ['S1','S2','B1','B2','ALL'];
-  lines.forEach(line=>{
-    const lineEvents = todayEvents.filter(e=>e.line===line||e.line==='ALL');
-    const lastBreakdown = [...lineEvents].reverse().find(e=>e.type==='breakdown');
-    const lastRestored  = [...lineEvents].reverse().find(e=>e.type==='restored');
-    if(lastBreakdown && (!lastRestored || lastRestored.time < lastBreakdown.time)){
-      active.push({...lastBreakdown, kind:'breakdown'});
-    }
-  });
-
-  // Power failure
-  const lastPF = [...todayEvents].reverse().find(e=>e.type==='power_failure');
-  const lastPR = [...todayEvents].reverse().find(e=>e.type==='power_restored');
-  if(lastPF && (!lastPR || lastPR.time < lastPF.time)){
-    active.push({...lastPF, kind:'power'});
-  }
-
-  const section = document.getElementById('active-events-section');
-  const list = document.getElementById('active-events-list');
-  if(!active.length){ section.style.display='none'; return; }
-  section.style.display='block';
-  let html='';
-  active.forEach(ev=>{
-    const cls = ev.kind==='power'?'ae-power':'ae-breakdown';
-    const endBtn = ev.kind==='power'
-      ? `<button class="end-btn end-power" onclick="logEvent('power_restored')">⚡ Restored</button>`
-      : `<button class="end-btn end-breakdown" onclick="endBreakdown('${ev.line}')">✅ Fixed</button>`;
-    html+=`<div class="active-event ${cls}">
-      <div>
-        <div class="ae-info">${ev.kind==='power'?'⚡ Power Failure — ALL lines':'⚠️ Breakdown — Line '+ev.line}</div>
-        <div class="ae-sub">${ev.reason||'No reason given'} · since ${ev.time.slice(0,5)}</div>
-      </div>
-      ${endBtn}
-    </div>`;
-  });
-  list.innerHTML=html;
-}
-
-function endBreakdown(line){
-  meLine=line;
-  document.querySelectorAll('[id^="me-"]').forEach(b=>{
-    b.classList.toggle('selected', b.id==='me-'+line);
-  });
-  saveEvent('restored', line, '');
-}
-
-function renderMachineLog(){
-  const td = today();
-  const rows = machineEvents.filter(e=>e.date===td);
-  if(!rows.length){
-    document.getElementById('machine-log-list').innerHTML='<div class="empty">No events today</div>';
-    return;
-  }
-  const labels = {
-    start:'Machine Start', stop:'Machine Stop',
-    breakdown:'Breakdown', restored:'Breakdown Fixed',
-    power_failure:'Power Failure', power_restored:'Power Restored'
-  };
-  const tagClass = {
-    start:'evt-start', stop:'evt-stop',
-    breakdown:'evt-breakdown', restored:'evt-restore',
-    power_failure:'evt-power', power_restored:'evt-restore'
-  };
-
-  // Calculate downtimes
-  let html='';
-  [...rows].reverse().forEach((ev,idx,arr)=>{
-    let downtime='';
-    if(ev.type==='restored'){
-      const matchBreakdown = [...rows].reverse().slice(idx+1).find(e=>e.type==='breakdown'&&e.line===ev.line);
-      if(matchBreakdown) downtime=' · Downtime: '+getDowntime(matchBreakdown.time, ev.time);
-    }
-    if(ev.type==='power_restored'){
-      const matchPF = [...rows].reverse().slice(idx+1).find(e=>e.type==='power_failure');
-      if(matchPF) downtime=' · Downtime: '+getDowntime(matchPF.time, ev.time);
-    }
-    html+=`<div class="event-log-item">
-      <div class="el-left">
-        <div class="el-type"><span class="ev-tag ${tagClass[ev.type]||''}">${labels[ev.type]||ev.type}</span> ${ev.line!=='ALL'?'Line '+ev.line:'All lines'}</div>
-        <div class="el-detail">${ev.reason?'Reason: '+ev.reason:''}${downtime} · by ${ev.operator||'—'}</div>
-      </div>
-      <div class="el-right">${ev.time.slice(0,5)}</div>
-    </div>`;
-  });
-  document.getElementById('machine-log-list').innerHTML=html;
-}
-
-// Unified switchTab covering all tabs
-function switchTab(name){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',
-    ['log','pending','stock','today','history','machine','admin'][i]===name));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  const panel = document.getElementById('panel-'+name);
-  if(panel) panel.classList.add('active');
-  if(name==='pending')renderPending();
-  if(name==='stock')renderStock();
-  if(name==='today')renderToday();
-  if(name==='history')renderHistory();
-  if(name==='machine'){renderMachineLog();renderActiveEvents();}
-  if(name==='admin')renderOperatorList();
-}
-
-// ---- Patch submitProd and submitBatch to include operator ----
-const _origSubmitProd = submitProd;
-submitProd = function(){
-  // Inject operator into next cache push by monkey-patching push temporarily
-  const opName = currentOperator ? currentOperator.name : 'Unknown';
-  const origPush = cache.push.bind(cache);
-  cache.push = function(entry){ cache.push = origPush; return origPush({...entry, operator:opName}); };
-  _origSubmitProd();
-}
-
-// Init on load
-document.addEventListener('DOMContentLoaded', ()=>{
-  initAuth();
-  renderActiveEvents();
-  updatePendingBadge();
-});
-
 </script>
 </body>
 </html>
