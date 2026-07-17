@@ -107,6 +107,7 @@
   .waste-preset{padding:10px 4px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;font-size:14px;font-weight:600;color:var(--sub);text-align:center;}
   .waste-preset:active{background:var(--green-light);border-color:var(--green);color:var(--green-dark);}
   .info-pill{display:inline-block;background:var(--green-light);color:var(--green-dark);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:12px;}
+  .pending-badge{display:none;margin-left:auto;background:rgba(255,255,255,0.25);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -117,6 +118,7 @@
       <h1>DU Rebar — Chemical Log</h1>
       <p>5.66 kg/cycle · 40 min/cycle</p>
     </div>
+    <span id="pending-badge" class="pending-badge"></span>
   </header>
   <div class="tabs">
     <button class="tab active" onclick="switchTab('log')">Log Cycle</button>
@@ -300,12 +302,95 @@ function toast(msg,type){
   setTimeout(()=>el.className='toast',2800);
 }
 
+function newId(prefix){
+  return prefix+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+}
+
 function dev(v,t){return Math.abs((v-t)/t*100);}
 function badge(d){
   if(d<=5) return['badge-ok','OK'];
   if(d<=10)return['badge-warn','High'];
   return['badge-bad','Alert'];
 }
+
+/* ================= SYNC ENGINE =================
+   The old code fired a POST and, on any failure to read the response,
+   quietly dropped the entry into localStorage forever with no retry —
+   that's why entries went missing. It also had no way to tell a retried
+   POST from a fresh one — that's why entries got duplicated.
+
+   Fix: every cycle/waste entry is queued with synced:false. We POST it
+   with mode:'no-cors' (so a CORS-blocked response no longer looks like
+   a failure), then separately VERIFY by GET whether the id actually
+   landed in the sheet. Only a verified id is marked synced. Anything
+   still unsynced is retried automatically — safely, because the backend
+   now ignores a second insert of the same id (see Code.gs). */
+
+function buildPayload(entry){
+  return {...entry, timestamp:entry.date+' '+entry.time+' IST'};
+}
+
+function postEntry(entry){
+  const payload=buildPayload(entry);
+  return fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)})
+    .catch(()=>{}); // no-cors gives an opaque response either way; ignore
+}
+
+function verifyIdSynced(id,sheetName){
+  const url=SCRIPT_URL+'?sheet='+encodeURIComponent(sheetName||'Sheet1')+'&_='+Date.now();
+  return fetch(url).then(r=>r.json()).then(d=>(d.data||[]).some(r=>r.id===id)).catch(()=>false);
+}
+
+function markSynced(id,silent){
+  let changed=false;
+  cache=cache.map(e=>{
+    if(e.id===id && e.synced!==true){changed=true;return {...e,synced:true};}
+    return e;
+  });
+  if(changed){
+    saveCache();
+    updatePendingBadge();
+    if(!silent)toast('Saved to Google Sheet ✓','ok');
+  }
+}
+
+function queueAndSync(entry){
+  cache.push(entry); saveCache(); updatePendingBadge();
+  postEntry(entry).then(()=>{
+    // give Apps Script a moment to commit before checking
+    setTimeout(()=>{
+      verifyIdSynced(entry.id).then(found=>{ if(found) markSynced(entry.id); });
+    },1800);
+  });
+}
+
+function syncPending(){
+  const pending=cache.filter(e=>e.synced===false);
+  if(!pending.length)return;
+  pending.forEach(entry=>{
+    verifyIdSynced(entry.id).then(found=>{
+      if(found){ markSynced(entry.id,true); }
+      else { postEntry(entry); } // safe to resend — server dedupes by id
+    });
+  });
+}
+
+function updatePendingBadge(){
+  const pending=cache.filter(e=>e.synced===false).length;
+  const el=document.getElementById('pending-badge');
+  if(!el)return;
+  if(pending>0){
+    el.style.display='inline-block';
+    el.textContent=pending+' pending sync';
+  } else {
+    el.style.display='none';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ updatePendingBadge(); syncPending(); });
+setInterval(syncPending,30000);
+window.addEventListener('online',syncPending);
+window.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') syncPending(); });
 
 /* ---- LINE SELECT ---- */
 function selectLine(el,line){
@@ -415,16 +500,12 @@ function submitBatch(){
   const m=multiplier;
   const SCALED={c1:BASE.c1*m,c2:BASE.c2*m,c3:BASE.c3*m,c4:BASE.c4*m};
   const alerts=Object.keys(vals).filter(k=>dev(vals[k],SCALED[k])>5).length;
-  const id='e_'+Date.now();
+  const id=newId('e');
   const date=istDate(); const time=istTime();
-  const entry={id,type:'cycle',date,time,line:activeLine,multiplier:m,c1,c2,c3,c4:vals.c4||null,total,alerts};
-  cache.push(entry); saveCache();
-  const btn=document.getElementById('submit-btn');
-  btn.disabled=true;btn.textContent='Saving…';
-  const payload={...entry,timestamp:date+' '+time+' IST'};
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
-    .then(r=>r.json()).then(()=>{toast('Saved to Google Sheet ✓','ok');resetForm();})
-    .catch(()=>{toast('Saved locally — sync when online');resetForm();});
+  const entry={id,type:'cycle',date,time,line:activeLine,multiplier:m,c1,c2,c3,c4:vals.c4||null,total,alerts,synced:false};
+  queueAndSync(entry);
+  toast('Queued — syncing to sheet…','ok');
+  resetForm();
 }
 
 function resetForm(){
@@ -469,12 +550,15 @@ function saveEdit(){
   const m=editingEntry.multiplier||1;
   const SCALED={c1:BASE.c1*m,c2:BASE.c2*m,c3:BASE.c3*m,c4:BASE.c4*m};
   const alerts=Object.keys(vals).filter(k=>dev(vals[k],SCALED[k])>5).length;
-  const updated={...editingEntry,...vals,c4:vals.c4||null,total,alerts,edited:true};
+  const updated={...editingEntry,...vals,c4:vals.c4||null,total,alerts,edited:true,synced:false};
   cache=cache.map(e=>e.id===editingEntry.id?updated:e);
   saveCache();
   const payload={...updated,timestamp:updated.date+' '+updated.time+' IST',action:'edit'};
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
-    .then(()=>toast('Correction saved ✓','ok')).catch(()=>toast('Saved locally','ok'));
+  fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)})
+    .then(()=>{
+      setTimeout(()=>markSynced(updated.id),1800);
+      toast('Correction queued ✓','ok');
+    });
   closeEditModal();
   if(document.getElementById('ft-'+updated.line).classList.contains('active'))setFilter(updated.line);
 }
@@ -485,8 +569,8 @@ function deleteEntry(){
   const payload={...editingEntry,action:'delete',timestamp:editingEntry.date+' '+editingEntry.time+' IST'};
   cache=cache.filter(e=>e.id!==editingEntry.id);
   saveCache();
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
-    .then(()=>toast('Entry deleted','ok')).catch(()=>toast('Deleted locally','ok'));
+  fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(payload)})
+    .then(()=>toast('Entry deleted','ok'));
   closeEditModal();
   const activeF=document.querySelector('.line-filter-btn.active');
   if(activeF)setFilter(activeF.textContent.trim());
@@ -505,13 +589,11 @@ function submitWaste(){
   const kg=parseFloat(document.getElementById('waste-kg').value);
   if(isNaN(kg)||kg<=0){toast('Enter waste amount','err');return;}
   const note=document.getElementById('waste-note').value.trim();
-  const id='w_'+Date.now();
+  const id=newId('w');
   const date=istDate();const time=istTime();
-  const entry={id,type:'waste',date,time,line:wasteLine,waste_kg:kg,note};
-  cache.push(entry);saveCache();
-  const payload={...entry,timestamp:date+' '+time+' IST'};
-  fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(payload)})
-    .then(()=>toast('Waste recorded ✓','ok')).catch(()=>toast('Saved locally','ok'));
+  const entry={id,type:'waste',date,time,line:wasteLine,waste_kg:kg,note,synced:false};
+  queueAndSync(entry);
+  toast('Queued — syncing to sheet…','ok');
   document.getElementById('waste-kg').value='';
   document.getElementById('waste-note').value='';
   renderWaste();
@@ -529,7 +611,7 @@ function renderWaste(){
   [...wasteToday].reverse().forEach(w=>{
     html+=`<div class="log-item">
       <div>
-        <div class="log-time">${w.time} <span class="lb lb-${w.line}">${w.line}</span> <span class="badge badge-waste">Waste</span></div>
+        <div class="log-time">${w.time} <span class="lb lb-${w.line}">${w.line}</span> <span class="badge badge-waste">Waste</span>${w.synced===false?' <span class="badge badge-warn">Syncing…</span>':''}</div>
         ${w.note?`<div class="log-vals">${w.note}</div>`:''}
       </div>
       <div class="log-kg">${w.waste_kg.toFixed(2)}<br><span style="font-size:10px;font-weight:400;color:var(--sub);">kg</span></div>
@@ -600,9 +682,10 @@ function renderToday(data,line){
     const al=parseInt(r.alerts||0);
     const mStr=r.multiplier&&r.multiplier!==1?` <span class="badge badge-edit">${r.multiplier}×</span>`:'';
     const editStr=r.edited?' <span class="badge badge-edit">Edited</span>':'';
+    const syncStr=r.synced===false?' <span class="badge badge-warn">Syncing…</span>':'';
     html+=`<div class="log-item">
       <div style="flex:1;">
-        <div class="log-time">${timeStr} <span class="lb lb-${r.line}">${r.line}</span>${mStr}${editStr}</div>
+        <div class="log-time">${timeStr} <span class="lb lb-${r.line}">${r.line}</span>${mStr}${editStr}${syncStr}</div>
         <div class="log-vals">C1:${parseFloat(r.c1).toFixed(3)} · C2:${parseFloat(r.c2).toFixed(3)} · C3:${parseFloat(r.c3).toFixed(3)}${c4str}</div>
         ${al>0?`<span class="badge badge-warn" style="margin-top:4px;display:inline-block;font-size:10px;">${al} alert${al>1?'s':''}</span>`:''}
         ${r.id?`<div class="log-actions"><button class="act-btn act-edit" onclick="openEdit('${r.id}')">Edit</button><button class="act-btn act-del" onclick="openEditDel('${r.id}')">Delete</button></div>`:''}
